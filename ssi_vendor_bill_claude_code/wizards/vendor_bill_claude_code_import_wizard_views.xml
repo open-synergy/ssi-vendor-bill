@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="vendor_bill_claude_code_import_wizard_view_form" model="ir.ui.view">
+        <field name="name">vendor.bill.claude.code.import.wizard - form</field>
+        <field name="model">vendor.bill.claude.code.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="AI Import Vendor Bill">
+                <group>
+                    <field name="move_id" invisible="1" />
+                    <field name="backend_id" />
+                    <field name="filename" invisible="1" />
+                    <field name="data_file" filename="filename" widget="binary" />
+                </group>
+                <footer>
+                    <button
+                        name="action_import"
+                        type="object"
+                        string="Import"
+                        class="btn-primary"
+                    />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

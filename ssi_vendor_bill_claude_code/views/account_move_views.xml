@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="account_move_claude_code_form" model="ir.ui.view">
+        <field name="name">account.move.claude.code.form</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_post'][1]" position="before">
+                <button
+                    name="action_open_vendor_bill_claude_code_wizard"
+                    type="object"
+                    string="AI Import"
+                    class="btn-secondary"
+                    attrs="{'invisible': ['|', ('move_type', '!=', 'in_invoice'), ('state', '!=', 'draft')]}"
+                />
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+                    name="action_open_claude_code_jobs"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-magic"
+                    attrs="{'invisible': [('claude_code_job_count', '=', 0)]}"
+                >
+                    <field
+                        name="claude_code_job_count"
+                        widget="statinfo"
+                        string="AI Import Jobs"
+                    />
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>
