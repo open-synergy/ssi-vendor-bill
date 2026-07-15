@@ -52,10 +52,7 @@
                     />
                 </xpath>
                 <xpath expr="//page[@name='note']" position="before">
-                    <page
-                        string="Claude Code Settings"
-                        name="claude_code_settings"
-                    >
+                    <page string="Claude Code Settings" name="claude_code_settings">
                         <group>
                             <field name="base_url" />
                             <field name="bearer_token" widget="password" />

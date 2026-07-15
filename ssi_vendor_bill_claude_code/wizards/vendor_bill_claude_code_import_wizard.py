@@ -33,8 +33,7 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
     data_file = fields.Binary(
         string="Vendor Bill File",
         required=True,
-        help="PDF or image (PNG/JPEG/WEBP/HEIC) of the vendor bill to "
-        "extract.",
+        help="PDF or image (PNG/JPEG/WEBP/HEIC) of the vendor bill to " "extract.",
     )
     filename = fields.Char(
         string="Filename",
@@ -60,9 +59,7 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
 
     def _import(self):
         self.ensure_one()
-        attachment = (
-            self.env["ir.attachment"].sudo().create(self._prepare_attachment())
-        )
+        attachment = self.env["ir.attachment"].sudo().create(self._prepare_attachment())
         job = (
             self.env["vendor.bill.claude.code.job"]
             .sudo()

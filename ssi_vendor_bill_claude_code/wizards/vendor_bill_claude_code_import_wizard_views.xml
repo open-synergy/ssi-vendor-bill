@@ -12,11 +12,7 @@
                     <field name="move_id" invisible="1" />
                     <field name="backend_id" />
                     <field name="filename" invisible="1" />
-                    <field
-                        name="data_file"
-                        filename="filename"
-                        widget="binary"
-                    />
+                    <field name="data_file" filename="filename" widget="binary" />
                 </group>
                 <footer>
                     <button

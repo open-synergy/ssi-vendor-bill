@@ -294,13 +294,9 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
     def test_wizard_preselect_backend_from_journal_default(self):
         if not self.purchase_journal:
             self.skipTest("No purchase journal found in test environment")
-        self.purchase_journal.write(
-            {"default_claude_code_backend_id": self.backend.id}
-        )
+        self.purchase_journal.write({"default_claude_code_backend_id": self.backend.id})
         move = self._make_move()
-        form = Form(
-            self.env[_WIZARD_MODEL].with_context(default_move_id=move.id)
-        )
+        form = Form(self.env[_WIZARD_MODEL].with_context(default_move_id=move.id))
         self.assertEqual(form.backend_id, self.backend)
 
     # ------------------------------------------------------------------
