@@ -198,6 +198,11 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
     def test_run_success_writes_move(self):
         if not self.purchase_journal:
             self.skipTest("No purchase journal found in test environment")
+        # A fully resolvable response (partner matched by VAT, no warnings,
+        # status ok) must land the job on 'done'.
+        vendor = self.env["res.partner"].create(
+            {"name": "Unique Success Vendor", "vat": "VBCLAUDE-SUCCESS-VAT"}
+        )
         move = self._make_move()
         job = self._make_job(move, unique_suffix="success")
         with patch(
@@ -205,11 +210,13 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
             return_value=_sample_response(
                 unique_suffix="success",
                 product_id=self.product.id if self.product else None,
+                partner_vat="VBCLAUDE-SUCCESS-VAT",
             ),
         ):
             job._run()
         self.assertEqual(job.state, "done")
         self.assertEqual(job.external_id, "vb_test_success")
+        self.assertEqual(move.partner_id, vendor)
         self.assertEqual(len(move.invoice_line_ids), 2)
         self.assertEqual(move.ref, "INV/2026/success")
 
