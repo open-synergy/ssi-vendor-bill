@@ -65,12 +65,7 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
             .sudo()
             .create(self._prepare_job(attachment))
         )
-        attachment.sudo().write(
-            {
-                "res_model": "vendor.bill.claude.code.job",
-                "res_id": job.id,
-            }
-        )
+        self._set_main_attachment(attachment)
         job.action_enqueue()
         return {
             "type": "ir.actions.client",
@@ -89,12 +84,24 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
             },
         }
 
+    def _set_main_attachment(self, attachment):
+        """Show the uploaded file in the vendor bill's document preview panel so
+        the extracted data can be checked against the source document."""
+        self.ensure_one()
+        if self.move_id.message_main_attachment_id:
+            return
+        self.move_id.sudo().with_context(tracking_disable=True).write(
+            {"message_main_attachment_id": attachment.id}
+        )
+
     def _prepare_attachment(self):
         self.ensure_one()
         return {
             "name": self.filename or "vendor_bill",
             "datas": self.data_file,
             "type": "binary",
+            "res_model": "account.move",
+            "res_id": self.move_id.id,
         }
 
     def _prepare_job(self, attachment):

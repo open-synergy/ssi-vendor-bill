@@ -1,0 +1,140 @@
+options:
+  auto_refresh: true
+
+setup:
+  steps:
+    - step: "Get first purchase journal"
+      action: "search"
+      model: "account.journal"
+      domain: [["type", "=", "purchase"]]
+      save_as: "journal"
+      limit: 1
+    - step: "Create draft vendor bill"
+      action: "create"
+      model: "account.move"
+      save_as: "move"
+      values:
+        move_type: "in_invoice"
+        journal_id: "REC: journal.id"
+
+scenarios:
+  - name: "Uploaded file becomes vendor bill attachment"
+    steps:
+      # `mixin.master_data` rejects duplicate codes, and scenarios share one
+      # transaction — so each scenario needs its own backend code.
+      - step: "Create backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        save_as: "backend"
+        values:
+          name: "Test Backend"
+          code: "BL245-ATTACH"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
+      - step: "Create import wizard"
+        action: "create"
+        model: "vendor.bill.claude.code.import.wizard"
+        save_as: "wizard"
+        values:
+          move_id: "REC: move.id"
+          backend_id: "REC: backend.id"
+          filename: "bill.pdf"
+          data_file: "ZHVtbXkgcGRmIGNvbnRlbnQ="
+      - step: "Run import"
+        action: "call"
+        target: "wizard"
+        method: "action_import"
+      - step: "Attachment is parented to the vendor bill"
+        action: "search"
+        model: "ir.attachment"
+        domain:
+          - ["res_model", "=", "account.move"]
+          - ["res_id", "=", "REC: move.id"]
+        save_as: "attachment"
+        expect_count: 1
+      - step: "Assert attachment name"
+        action: "assert"
+        target: "attachment"
+        asserts:
+          name:
+            type: "value"
+            expected: "bill.pdf"
+      - step: "Assert document preview panel is filled"
+        action: "assert"
+        target: "move"
+        asserts:
+          message_main_attachment_id:
+            type: "m2o"
+            expected: "REC: attachment"
+      - step: "Job is enqueued for the vendor bill"
+        action: "search"
+        model: "vendor.bill.claude.code.job"
+        domain:
+          - ["move_id", "=", "REC: move.id"]
+        save_as: "job"
+        expect_count: 1
+      - step: "Job still points to the same attachment"
+        action: "assert"
+        target: "job"
+        asserts:
+          attachment_id:
+            type: "m2o"
+            expected: "REC: attachment"
+          state:
+            type: "value"
+            expected: "queued"
+
+  - name: "Existing main attachment is not overwritten"
+    steps:
+      - step: "Create backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        save_as: "backend"
+        values:
+          name: "Test Backend"
+          code: "BL245-NOOVERWRITE"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
+      - step: "Create pre-existing attachment"
+        action: "create"
+        model: "ir.attachment"
+        save_as: "existing"
+        values:
+          name: "existing.pdf"
+          datas: "ZXhpc3Rpbmc="
+          type: "binary"
+          res_model: "account.move"
+          res_id: "REC: move.id"
+      - step: "Set it as main attachment"
+        action: "write"
+        target: "move"
+        values:
+          message_main_attachment_id: "REC: existing.id"
+      - step: "Create import wizard"
+        action: "create"
+        model: "vendor.bill.claude.code.import.wizard"
+        save_as: "wizard"
+        values:
+          move_id: "REC: move.id"
+          backend_id: "REC: backend.id"
+          filename: "bill.pdf"
+          data_file: "ZHVtbXkgcGRmIGNvbnRlbnQ="
+      - step: "Run import"
+        action: "call"
+        target: "wizard"
+        method: "action_import"
+      - step: "Main attachment is untouched"
+        action: "assert"
+        target: "move"
+        asserts:
+          message_main_attachment_id:
+            type: "m2o"
+            expected: "REC: existing"
+      - step: "Uploaded file is still attached to the vendor bill"
+        action: "search"
+        model: "ir.attachment"
+        domain:
+          - ["res_model", "=", "account.move"]
+          - ["res_id", "=", "REC: move.id"]
+        save_as: "attachments"
+        expect_count: 2
