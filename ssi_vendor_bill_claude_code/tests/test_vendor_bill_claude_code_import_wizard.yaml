@@ -9,15 +9,6 @@ setup:
       domain: [["type", "=", "purchase"]]
       save_as: "journal"
       limit: 1
-    - step: "Create backend"
-      action: "create"
-      model: "vendor.bill.claude.code.backend"
-      save_as: "backend"
-      values:
-        name: "Test Backend"
-        code: "BL245-BACKEND"
-        base_url: "https://vendor-bill.example.com"
-        bearer_token: "test-token"
     - step: "Create draft vendor bill"
       action: "create"
       model: "account.move"
@@ -29,6 +20,17 @@ setup:
 scenarios:
   - name: "Uploaded file becomes vendor bill attachment"
     steps:
+      # `mixin.master_data` rejects duplicate codes, and scenarios share one
+      # transaction — so each scenario needs its own backend code.
+      - step: "Create backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        save_as: "backend"
+        values:
+          name: "Test Backend"
+          code: "BL245-ATTACH"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
       - step: "Create import wizard"
         action: "create"
         model: "vendor.bill.claude.code.import.wizard"
@@ -84,6 +86,15 @@ scenarios:
 
   - name: "Existing main attachment is not overwritten"
     steps:
+      - step: "Create backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        save_as: "backend"
+        values:
+          name: "Test Backend"
+          code: "BL245-NOOVERWRITE"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
       - step: "Create pre-existing attachment"
         action: "create"
         model: "ir.attachment"
