@@ -291,8 +291,9 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs.state, "queued")
         self.assertEqual(jobs.backend_id, self.backend)
-        self.assertEqual(jobs.attachment_id.res_model, _JOB_MODEL)
-        self.assertEqual(jobs.attachment_id.res_id, jobs.id)
+        self.assertEqual(jobs.attachment_id.res_model, "account.move")
+        self.assertEqual(jobs.attachment_id.res_id, move.id)
+        self.assertEqual(move.message_main_attachment_id, jobs.attachment_id)
         self.assertEqual(action["tag"], "display_notification")
         self.assertEqual(
             action["params"]["next"]["type"], "ir.actions.act_window_close"
