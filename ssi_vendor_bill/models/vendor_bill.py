@@ -30,6 +30,18 @@ class VendorBill(models.Model):
     _inherit = "account.move"
     _table = "account_move"
     _description = "Vendor Bill"
+    # account.move carries Many2many fields with an explicit relation table
+    # (e.g. `transaction_ids` from the `payment` module). Odoo's field setup
+    # rejects two _auto=True models sharing the same m2m relation table.
+    # vendor_bill does not own the table's schema -- account.move does --
+    # so mark it _auto=False to skip that ownership check (no table/column
+    # management runs for this model, which is correct: the table is
+    # created and migrated by account.move alone).
+    _auto = False
+    # _auto=False defaults _log_access to False too, which would silently
+    # stop create()/write() from stamping create_uid/write_uid/*_date on the
+    # shared columns. Force it back on so the audit trail keeps working.
+    _log_access = True
 
     move_type = fields.Selection(
         default="in_invoice",
