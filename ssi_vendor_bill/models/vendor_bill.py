@@ -47,25 +47,43 @@ class VendorBill(models.Model):
         default="in_invoice",
     )
 
+    def _as_account_move(self):
+        """Re-browse this recordset as a genuine ``account.move``.
+
+        Several methods inherited from ``account.move`` (e.g.
+        ``_compute_name``, which assigns the sequence-based document
+        number) build an internal accumulator hardcoded to
+        ``self.env['account.move']`` and then concatenate it with the
+        recordset being processed. That concatenation raises a
+        ``TypeError`` when the recordset is a ``vendor_bill`` instead,
+        since the two are distinct models even though they share the
+        physical table. Running mutating operations through a real
+        ``account.move`` recordset (same physical rows, same ids) avoids
+        that class mismatch entirely.
+        """
+        return self.env["account.move"].browse(self.ids)
+
     @api.model_create_multi
-    def create(self, vals_list):
+    def create(self, vals_list):  # pylint: disable=method-required-super
         for vals in vals_list:
             vals["move_type"] = "in_invoice"
         # Elevate so a user holding only `vendor_bill` ACL can create it,
         # without needing direct access to account.move/account.move.line.
         # sudo() in Odoo 14 keeps env.uid = triggering user -> create_uid
-        # stays correct.
-        records = super(VendorBill, self.sudo()).create(vals_list)
-        return records.with_env(self.env)
+        # stays correct. Create through account.move itself (see
+        # _as_account_move) rather than super(), since create() is where
+        # the sequence-name computation above is triggered.
+        account_moves = self.env["account.move"].sudo().create(vals_list)
+        return self.browse(account_moves.ids).with_env(self.env)
 
-    def write(self, vals):
-        return super(VendorBill, self.sudo()).write(vals)
+    def write(self, vals):  # pylint: disable=method-required-super
+        return self._as_account_move().sudo().write(vals)
 
     def action_post(self):
-        return super(VendorBill, self.sudo()).action_post()
+        return self._as_account_move().sudo().action_post()
 
     def button_draft(self):
-        return super(VendorBill, self.sudo()).button_draft()
+        return self._as_account_move().sudo().button_draft()
 
     def button_cancel(self):
-        return super(VendorBill, self.sudo()).button_cancel()
+        return self._as_account_move().sudo().button_cancel()
