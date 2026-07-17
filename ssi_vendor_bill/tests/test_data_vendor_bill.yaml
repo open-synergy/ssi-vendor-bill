@@ -1,0 +1,247 @@
+setup:
+  steps:
+    - step: "Get expense account type"
+      action: "ref"
+      xml_id: "account.data_account_type_expenses"
+      save_as: "expense_acc_type"
+
+    - step: "Create expense account"
+      action: "create"
+      model: "account.account"
+      save_as: "expense_account"
+      values:
+        code: "VBILL-EXP"
+        name: "Vendor Bill Test Expense"
+        user_type_id: "REC: expense_acc_type.id"
+
+    - step: "Create purchase journal"
+      action: "create"
+      model: "account.journal"
+      save_as: "journal"
+      values:
+        name: "Test Vendor Bill Purchase Journal"
+        code: "VBILLJ"
+        type: "purchase"
+
+    - step: "Create sale journal"
+      action: "create"
+      model: "account.journal"
+      save_as: "sale_journal"
+      values:
+        name: "Test Vendor Bill Sale Journal"
+        code: "VBILLSJ"
+        type: "sale"
+
+    - step: "Create vendor partner"
+      action: "create"
+      model: "res.partner"
+      save_as: "vendor"
+      values:
+        name: "Test Vendor Bill Partner"
+        is_company: true
+
+scenarios:
+  - name: "Create Vendor Bill forces in_invoice move_type default"
+    steps:
+      - step: "Create bill without move_type"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+
+      - step: "Assert defaults applied"
+        action: "assert"
+        target: "bill"
+        asserts:
+          move_type:
+            type: "value"
+            expected: "in_invoice"
+          state:
+            type: "value"
+            expected: "draft"
+
+  - name: "Global rule hides other move types from Vendor Bill"
+    steps:
+      - step: "Create customer invoice via account.move"
+        action: "create"
+        model: "account.move"
+        save_as: "customer_invoice"
+        values:
+          move_type: "out_invoice"
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: sale_journal.id"
+
+      - step: "Create vendor refund via account.move"
+        action: "create"
+        model: "account.move"
+        save_as: "vendor_refund"
+        values:
+          move_type: "in_refund"
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+
+      - step: "Create vendor bill via vendor_bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+
+      - step: "Other move types are not visible through vendor_bill"
+        action: "search"
+        model: "vendor_bill"
+        as_user: "base.user_admin"
+        domain:
+          - ["id", "in", ["REC: customer_invoice.id", "REC: vendor_refund.id"]]
+        save_as: "found_others"
+        expect_count: 0
+
+      - step: "Vendor bill is visible through vendor_bill"
+        action: "search"
+        model: "vendor_bill"
+        as_user: "base.user_admin"
+        domain:
+          - ["id", "=", "REC: bill.id"]
+        save_as: "found_bill"
+        expect_count: 1
+
+  - name: "Inherited workflow methods post and reset to draft"
+    options: {auto_refresh: true}
+    steps:
+      - step: "Create bill with a line"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+          invoice_date: "EVAL: datetime.now().date()"
+          invoice_line_ids:
+            - - 0
+              - 0
+              - name: "Test Line"
+                quantity: 1
+                price_unit: 100000.0
+                account_id: "REC: expense_account.id"
+
+      - step: "Assert draft"
+        action: "assert"
+        target: "bill"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+      - step: "Post bill"
+        action: "call"
+        target: "bill"
+        method: "action_post"
+        as_user: "base.user_admin"
+
+      - step: "Assert posted"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "posted"
+
+      - step: "Reset bill to draft"
+        action: "call"
+        target: "bill"
+        method: "button_draft"
+        as_user: "base.user_admin"
+
+      - step: "Assert back to draft"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+  - name: "Create overrides forced move_type back to vendor bill"
+    steps:
+      - step: "Create bill trying to force out_invoice"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          move_type: "out_invoice"
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+
+      - step: "Assert create() forced in_invoice"
+        action: "assert"
+        target: "bill"
+        asserts:
+          move_type:
+            type: "value"
+            expected: "in_invoice"
+
+  - name: "Restricted user (no account.move ACL) can create and post bill via sudo"
+    options: {auto_refresh: true}
+    steps:
+      - step: "Create restricted vendor-bill user (no account.move ACL)"
+        action: "create"
+        model: "res.users"
+        save_as: "bill_user"
+        values:
+          name: "Vendor Bill Only User"
+          login: "vendor_bill_only_user"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_financial_accounting.bill_user_group"
+                - "REF: ssi_financial_accounting.bill_company_group"
+
+      - step:
+          "Create bill as restricted user -> must succeed (sudo materializes
+          account.move lines)"
+        action: "create"
+        model: "vendor_bill"
+        as_user: "bill_user"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+          invoice_date: "EVAL: datetime.now().date()"
+          invoice_line_ids:
+            - - 0
+              - 0
+              - name: "Test Line"
+                quantity: 1
+                price_unit: 50000.0
+                account_id: "REC: expense_account.id"
+
+      - step: "Assert draft + audit trail kept (sudo() keeps real user as create_uid)"
+        action: "assert"
+        target: "bill"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+          create_uid:
+            type: "m2o"
+            expected: "REC: bill_user"
+
+      - step: "Post bill as restricted user -> must succeed (posts account.move)"
+        action: "call"
+        target: "bill"
+        method: "action_post"
+        as_user: "bill_user"
+
+      - step: "Assert posted"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "posted"
