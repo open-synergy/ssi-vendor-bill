@@ -8,15 +8,15 @@ setup:
     # `setup:` replays before every scenario in the same transaction (no
     # rollback in between), so a fixed `code` would collide with the
     # previous scenario's record on the 2nd+ replay (code is unique per
-    # company). Generate a fresh, never-colliding code on each replay via
-    # the same helper Odoo itself uses for account codes.
+    # company). Generate a fresh, never-colliding code on each replay
+    # from the current record count (EVAL cannot call private/underscore
+    # attributes, so a helper like _search_new_account_code is off-limits).
     - step: "Create expense account"
       action: "create"
       model: "account.account"
       save_as: "expense_account"
       values:
-        code:
-          "EVAL: env['account.account']._search_new_account_code(env.company, 6, 'VBX')"
+        code: "EVAL: 'VBX%d' % env['account.account'].search_count([])"
         name: "Vendor Bill Test Expense"
         user_type_id: "REC: expense_acc_type.id"
 
