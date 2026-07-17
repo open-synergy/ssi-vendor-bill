@@ -20,12 +20,17 @@ setup:
         name: "Vendor Bill Test Expense"
         user_type_id: "REC: expense_acc_type.id"
 
+    # `name` must vary too: the journal's mail alias is derived from
+    # `name`, and alias names are globally unique, so a fixed `name`
+    # would also collide on the 2nd+ replay of this setup block.
     - step: "Create purchase journal"
       action: "create"
       model: "account.journal"
       save_as: "journal"
       values:
-        name: "Test Vendor Bill Purchase Journal"
+        name:
+          "EVAL: 'Test Vendor Bill Purchase Journal %d' %
+          env['account.journal'].search_count([])"
         code: "EVAL: 'PJ%d' % env['account.journal'].search_count([])"
         type: "purchase"
 
@@ -34,7 +39,9 @@ setup:
       model: "account.journal"
       save_as: "sale_journal"
       values:
-        name: "Test Vendor Bill Sale Journal"
+        name:
+          "EVAL: 'Test Vendor Bill Sale Journal %d' %
+          env['account.journal'].search_count([])"
         code: "EVAL: 'SJ%d' % env['account.journal'].search_count([])"
         type: "sale"
 
