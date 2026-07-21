@@ -1,0 +1,350 @@
+setup:
+  steps:
+    - step: "Get payable account type"
+      action: "ref"
+      xml_id: "account.data_account_type_payable"
+      save_as: "payable_acc_type"
+
+    - step: "Get expense account type"
+      action: "ref"
+      xml_id: "account.data_account_type_expenses"
+      save_as: "expense_acc_type"
+
+    # `setup:` replays before every scenario in the same transaction (no
+    # rollback in between), so a fixed `code` would collide with the
+    # previous scenario's record on the 2nd+ replay. Generate a fresh,
+    # never-colliding code on each replay.
+    - step: "Create payable account"
+      action: "create"
+      model: "account.account"
+      save_as: "account"
+      values:
+        code: "EVAL: 'VBLP%d' % env['account.account'].search_count([])"
+        name: "Test Vendor Bill Line Payable"
+        user_type_id: "REC: payable_acc_type.id"
+        reconcile: true
+
+    - step: "Create line expense account"
+      action: "create"
+      model: "account.account"
+      save_as: "line_account"
+      values:
+        code: "EVAL: 'VBLE%d' % env['account.account'].search_count([])"
+        name: "Test Vendor Bill Line Expense"
+        user_type_id: "REC: expense_acc_type.id"
+
+    - step: "Create purchase journal"
+      action: "create"
+      model: "account.journal"
+      save_as: "journal"
+      values:
+        name:
+          "EVAL: 'Test Vendor Bill Line Purchase Journal %d' %
+          env['account.journal'].search_count([])"
+        code: "EVAL: 'VBLJ%d' % env['account.journal'].search_count([])"
+        type: "purchase"
+
+    - step: "Create vendor bill type"
+      action: "create"
+      model: "vendor_bill_type"
+      save_as: "type"
+      values:
+        name: "Test Vendor Bill Line Type"
+        code: "/"
+        journal_id: "REC: journal.id"
+        payable_account_id: "REC: account.id"
+
+    - step: "Create vendor partner"
+      action: "create"
+      model: "res.partner"
+      save_as: "vendor"
+      values:
+        name: "Test Vendor Bill Line Partner"
+        is_company: true
+
+    - step: "Create a billable product"
+      action: "create"
+      model: "product.product"
+      save_as: "product"
+      values:
+        name: "Test Vendor Bill Line Product"
+
+    # `account_id` on the tax's own "tax" repartition line is what ends up
+    # populating `vendor_bill.tax.account_id` (required=True) when
+    # `_recompute_standard_tax()` builds the tax line automatically --
+    # without it, `compute_all()` returns no account and the auto-created
+    # `vendor_bill.tax` row violates the NOT NULL constraint.
+    - step: "Create an 11% purchase tax"
+      action: "create"
+      model: "account.tax"
+      save_as: "tax11"
+      values:
+        name:
+          "EVAL: 'Test Vendor Bill Line VAT 11pct %d' %
+          env['account.tax'].search_count([])"
+        amount_type: "percent"
+        amount: 11.0
+        type_tax_use: "purchase"
+        invoice_repartition_line_ids:
+          - - 0
+            - 0
+            - factor_percent: 100
+              repartition_type: "base"
+          - - 0
+            - 0
+            - factor_percent: 100
+              repartition_type: "tax"
+              account_id: "REC: line_account.id"
+        refund_repartition_line_ids:
+          - - 0
+            - 0
+            - factor_percent: 100
+              repartition_type: "base"
+          - - 0
+            - 0
+            - factor_percent: 100
+              repartition_type: "tax"
+              account_id: "REC: line_account.id"
+
+    - step: "Create vendor bill"
+      action: "create"
+      model: "vendor_bill"
+      save_as: "bill"
+      values:
+        type_id: "REC: type.id"
+        partner_id: "REC: vendor.id"
+        date: 2024-01-15
+        date_due: 2024-02-15
+        currency_id: "REF: base.USD"
+        pricelist_id: "REF: product.list0"
+        journal_id: "REC: journal.id"
+        payable_account_id: "REC: account.id"
+
+scenarios:
+  - name: "Unlinking a detail line reduces amount_untaxed by its subtotal"
+    steps:
+      - step: "Create first detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line1"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          product_id: "REC: product.id"
+          name: "Line 1"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 200000.0
+
+      - step: "Create second detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line2"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          product_id: "REC: product.id"
+          name: "Line 2"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 300000.0
+
+      - step: "Assert untaxed amount is the sum of both lines"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          amount_untaxed:
+            type: "value"
+            expected: 500000.0
+
+      - step: "Unlink the first line"
+        action: "unlink"
+        target: "line1"
+
+      - step: "Assert untaxed amount decreased by the unlinked line's subtotal"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          amount_untaxed:
+            type: "value"
+            expected: 300000.0
+
+  - name: "Detail line mirrors date and currency from its header"
+    steps:
+      - step: "Create a detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          product_id: "REC: product.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 100000.0
+
+      - step: "Assert line date and currency equal the header's"
+        action: "assert"
+        target: "line"
+        asserts:
+          date:
+            type: "value"
+            expected: 2024-01-15
+          currency_id:
+            type: "m2o"
+            expected_xml_id: "base.USD"
+
+  - name: "Deleting a vendor bill cascades to its detail and tax lines"
+    steps:
+      - step: "Create a detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          product_id: "REC: product.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 100000.0
+
+      - step: "Create a tax line"
+        action: "create"
+        model: "vendor_bill.tax"
+        save_as: "tax_line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Tax"
+          tax_id: "REC: tax11.id"
+          account_id: "REC: line_account.id"
+          base_amount: 100000.0
+          tax_amount: 11000.0
+
+      - step: "Delete the vendor bill"
+        action: "unlink"
+        target: "bill"
+
+      - step: "Detail line no longer exists"
+        action: "search"
+        model: "vendor_bill.line"
+        domain:
+          - ["id", "=", "REC: line.id"]
+        save_as: "found_line"
+        expect_count: 0
+
+      - step: "Tax line no longer exists"
+        action: "search"
+        model: "vendor_bill.tax"
+        domain:
+          - ["id", "=", "REC: tax_line.id"]
+        save_as: "found_tax"
+        expect_count: 0
+
+  - name: "Confirming a bill with taxed lines computes tax lines automatically"
+    steps:
+      - step: "Create a taxed detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          product_id: "REC: product.id"
+          name: "Taxed Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 100000.0
+          tax_ids:
+            - - 6
+              - 0
+              - - "REC: tax11.id"
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Assert tax lines were computed"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          tax_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 1
+
+  - name: "Compute allowed_product_ids from type's manual product list"
+    steps:
+      - step: "Create a second vendor bill type with a manual product allow-list"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "manual_product_type"
+        values:
+          name: "Test Vendor Bill Line Type Manual Product"
+          code: "/"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+          product_selection_method: "manual"
+          product_ids:
+            - - 6
+              - 0
+              - - "REC: product.id"
+
+      - step: "Create vendor bill using that type"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "manual_product_bill"
+        values:
+          type_id: "REC: manual_product_type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Assert allowed_product_ids is exactly the manual list"
+        action: "assert"
+        target: "manual_product_bill"
+        asserts:
+          allowed_product_ids:
+            type: "m2m"
+            check: "exact"
+            expected_records:
+              - "REC: product"
+
+  - name: "Creating a detail line is rejected for a user without the User group"
+    steps:
+      - step: "Create a plain internal user without vendor_bill_user_group"
+        action: "create"
+        model: "res.users"
+        save_as: "plain_user"
+        values:
+          name: "Vendor Bill Line Plain User"
+          login:
+            "EVAL: 'vendor_bill_line_plain_user_%d' % env['res.users'].search_count([])"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+
+      - step: "Create as plain user must be rejected"
+        action: "create"
+        model: "vendor_bill.line"
+        as_user: "plain_user"
+        expect_error:
+          type: "AccessError"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          product_id: "REC: product.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 100000.0

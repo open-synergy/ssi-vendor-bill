@@ -21,4 +21,42 @@
     <field name="perm_create" eval="1" />
     <field name="perm_unlink" eval="0" />
 </record>
+
+<record id="vendor_bill_line_all_access" model="ir.model.access">
+    <field name="name">vendor_bill.line - all</field>
+    <field name="model_id" ref="model_vendor_bill_line" />
+    <field name="perm_read" eval="1" />
+    <field name="perm_write" eval="0" />
+    <field name="perm_create" eval="0" />
+    <field name="perm_unlink" eval="0" />
+</record>
+
+<record id="vendor_bill_line_user_access" model="ir.model.access">
+    <field name="name">vendor_bill.line - user</field>
+    <field name="model_id" ref="model_vendor_bill_line" />
+    <field name="group_id" ref="vendor_bill_user_group" />
+    <field name="perm_read" eval="1" />
+    <field name="perm_write" eval="1" />
+    <field name="perm_create" eval="1" />
+    <field name="perm_unlink" eval="1" />
+</record>
+
+<record id="vendor_bill_tax_all_access" model="ir.model.access">
+    <field name="name">vendor_bill.tax - all</field>
+    <field name="model_id" ref="model_vendor_bill_tax" />
+    <field name="perm_read" eval="1" />
+    <field name="perm_write" eval="0" />
+    <field name="perm_create" eval="0" />
+    <field name="perm_unlink" eval="0" />
+</record>
+
+<record id="vendor_bill_tax_user_access" model="ir.model.access">
+    <field name="name">vendor_bill.tax - user</field>
+    <field name="model_id" ref="model_vendor_bill_tax" />
+    <field name="group_id" ref="vendor_bill_user_group" />
+    <field name="perm_read" eval="1" />
+    <field name="perm_write" eval="1" />
+    <field name="perm_create" eval="1" />
+    <field name="perm_unlink" eval="1" />
+</record>
 </odoo>

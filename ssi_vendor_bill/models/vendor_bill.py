@@ -31,6 +31,8 @@ class VendorBill(models.Model):
         "mixin.transaction_partner",
         "mixin.company_currency",
         "mixin.many2one_configurator",
+        "mixin.transaction_pricelist",
+        "mixin.account_move",
     ]
 
     # A. Atribut Multiple Approval
@@ -76,6 +78,13 @@ class VendorBill(models.Model):
 
     # E. Atribut Sequence
     _create_sequence_state = "open"
+
+    # E2. Atribut Perhitungan Pajak (mixin.account_move)
+    _tax_lines_field_name = "tax_ids"
+    _tax_on_self = False
+    _tax_source_recordset_field_name = "line_ids"
+    _price_unit_field_name = "price_unit"
+    _quantity_field_name = "uom_quantity"
 
     # F. Definisi Field
     state = fields.Selection(
@@ -178,6 +187,59 @@ class VendorBill(models.Model):
         "determined by the pricelist selection method configured on "
         "the selected Type.",
     )
+    allowed_product_ids = fields.Many2many(
+        string="Allowed Products",
+        comodel_name="product.product",
+        compute="_compute_allowed_product_ids",
+        store=False,
+        compute_sudo=True,
+        help="Products that may be selected on the detail lines of this "
+        "document, determined by the product selection method "
+        "configured on the selected Type.",
+    )
+    line_ids = fields.One2many(
+        string="Lines",
+        comodel_name="vendor_bill.line",
+        inverse_name="vendor_bill_id",
+        readonly=True,
+        states={"draft": [("readonly", False)]},
+        help="Product/service detail lines being billed on this "
+        "document. Used to compute the untaxed amount and, together "
+        "with the applicable taxes, the tax lines.",
+    )
+    tax_ids = fields.One2many(
+        string="Taxes",
+        comodel_name="vendor_bill.tax",
+        inverse_name="vendor_bill_id",
+        readonly=True,
+        states={"draft": [("readonly", False)]},
+        help="Tax lines computed automatically from the detail lines "
+        "(or entered manually).",
+    )
+    amount_untaxed = fields.Monetary(
+        string="Untaxed Amount",
+        compute="_compute_amount",
+        store=True,
+        compute_sudo=True,
+        currency_field="currency_id",
+        help="Sum of the price subtotal of every detail line.",
+    )
+    amount_tax = fields.Monetary(
+        string="Tax",
+        compute="_compute_amount",
+        store=True,
+        compute_sudo=True,
+        currency_field="currency_id",
+        help="Sum of the tax amount of every tax line.",
+    )
+    amount_total = fields.Monetary(
+        string="Total",
+        compute="_compute_amount",
+        store=True,
+        compute_sudo=True,
+        currency_field="currency_id",
+        help="Untaxed amount plus tax amount.",
+    )
 
     # G. Compute Methods
     @api.depends("type_id")
@@ -208,6 +270,32 @@ class VendorBill(models.Model):
                 )
             record.allowed_pricelist_ids = result
 
+    @api.depends("type_id")
+    def _compute_allowed_product_ids(self):
+        for record in self:
+            result = False
+            if record.type_id:
+                result = record._m2o_configurator_get_filter(
+                    object_name="product.product",
+                    method_selection=record.type_id.product_selection_method,
+                    manual_recordset=record.type_id.product_ids,
+                    domain=record.type_id.product_domain,
+                    python_code=record.type_id.product_python_code,
+                )
+            record.allowed_product_ids = result
+
+    @api.depends(
+        "line_ids.price_subtotal",
+        "tax_ids.tax_amount",
+    )
+    def _compute_amount(self):
+        for record in self:
+            amount_untaxed = sum(record.line_ids.mapped("price_subtotal"))
+            amount_tax = sum(record.tax_ids.mapped("tax_amount"))
+            record.amount_untaxed = amount_untaxed
+            record.amount_tax = amount_tax
+            record.amount_total = amount_untaxed + amount_tax
+
     # H. Onchange Methods
     @api.onchange("type_id")
     def onchange_journal_id(self):
@@ -220,6 +308,21 @@ class VendorBill(models.Model):
         self.payable_account_id = False
         if self.type_id:
             self.payable_account_id = self.type_id.payable_account_id
+
+    # I. Action Methods
+    def action_compute_tax(self):
+        for record in self.sudo():
+            record._compute_tax()
+
+    def _compute_tax(self):
+        self.ensure_one()
+        self._recompute_standard_tax()
+
+    # I2. Pre-confirm Hook: Recompute Tax
+    @ssi_decorator.pre_confirm_action()
+    def _01_compute_tax(self):
+        self.ensure_one()
+        self._recompute_standard_tax()
 
     # J. Decorator: Insert Form Element
     @ssi_decorator.insert_on_form_view()

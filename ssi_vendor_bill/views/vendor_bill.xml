@@ -33,6 +33,7 @@
                 <field name="type_id" optional="hide" />
                 <field name="date" />
                 <field name="date_due" />
+                <field name="amount_total" sum="Total" />
             </xpath>
         </data>
     </field>
@@ -59,6 +60,54 @@
                 <field name="journal_id" />
                 <field name="payable_account_id" />
                 <field name="analytic_account_id" />
+            </xpath>
+            <xpath expr="//page[1]" position="before">
+                <page name="detail" string="Detail">
+                    <field name="allowed_product_ids" invisible="1" />
+                    <field name="line_ids">
+                        <tree editable="top">
+                            <field name="currency_id" invisible="1" />
+                            <field
+                                    name="product_id"
+                                    domain="[('id','in',parent.allowed_product_ids)]"
+                                />
+                            <field name="name" />
+                            <field name="usage_id" />
+                            <field name="account_id" />
+                            <field name="analytic_account_id" />
+                            <field name="uom_id" />
+                            <field name="uom_quantity" />
+                            <field name="price_unit" />
+                            <field name="tax_ids" widget="many2many_tags" />
+                            <field name="price_subtotal" sum="Untaxed Amount" />
+                        </tree>
+                    </field>
+                    <div class="oe_right">
+                        <button
+                                name="action_compute_tax"
+                                type="object"
+                                string="Compute Tax"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('state','!=','draft')]}"
+                            />
+                    </div>
+                    <field name="tax_ids">
+                        <tree editable="top">
+                            <field name="currency_id" invisible="1" />
+                            <field name="name" />
+                            <field name="tax_id" />
+                            <field name="account_id" />
+                            <field name="base_amount" />
+                            <field name="tax_amount" sum="Tax Amount" />
+                            <field name="manual" />
+                        </tree>
+                    </field>
+                    <group name="detail_amount" col="2">
+                        <field name="amount_untaxed" />
+                        <field name="amount_tax" />
+                        <field name="amount_total" />
+                    </group>
+                </page>
             </xpath>
         </data>
     </field>
