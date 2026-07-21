@@ -196,7 +196,7 @@ scenarios:
             - - 6
               - 0
               - - "REF: base.group_user"
-                - "REF: ssi_financial_accounting.bill_user_group"
+                - "REF: ssi_vendor_bill.vendor_bill_user_group"
                 - "REF: ssi_vendor_bill_operating_unit.vendor_bill_ou_group"
           assigned_operating_unit_ids:
             - - 6
@@ -214,7 +214,7 @@ scenarios:
             - - 6
               - 0
               - - "REF: base.group_user"
-                - "REF: ssi_financial_accounting.bill_user_group"
+                - "REF: ssi_vendor_bill.vendor_bill_user_group"
                 - "REF: ssi_vendor_bill_operating_unit.vendor_bill_ou_group"
           assigned_operating_unit_ids:
             - - 6
@@ -238,3 +238,28 @@ scenarios:
           - ["id", "=", "REC: bill.id"]
         save_as: "seen_by_b"
         expect_count: 0
+
+  - name: "Local company group implies the operating unit group (implied)"
+    steps:
+      - step: "Create user with local vendor_bill company group only"
+        action: "create"
+        model: "res.users"
+        save_as: "company_user"
+        values:
+          name: "Vendor Bill OU Company-Group User"
+          login: "vendor_bill_ou_company_group_user"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_vendor_bill.vendor_bill_company_group"
+
+      - step: "User automatically obtains the operating unit group (implied)"
+        action: "assert"
+        target: "company_user"
+        asserts:
+          groups_id:
+            type: "m2m"
+            check: "contains_xml_ids"
+            expected_xml_ids:
+              - "ssi_vendor_bill_operating_unit.vendor_bill_ou_group"
