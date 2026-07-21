@@ -25,6 +25,13 @@ class VendorBillTax(models.Model):
     ]
     _order = "vendor_bill_id, id"
 
+    # account.move.line
+    _partner_id_field_name = "partner_id"
+    _analytic_account_id_field_name = "analytic_account_id"
+    _label_field_name = "name"
+    _amount_currency_field_name = "tax_amount"
+    _normal_amount = "debit"
+
     vendor_bill_id = fields.Many2one(
         string="# Vendor Bill",
         comodel_name="vendor_bill",
@@ -33,6 +40,15 @@ class VendorBillTax(models.Model):
     )
 
     # Convenience fields mirrored from the header.
+    move_id = fields.Many2one(
+        related="vendor_bill_id.move_id",
+        compute_sudo=True,
+    )
+    account_move_line_id = fields.Many2one(
+        string="Journal Item",
+        comodel_name="account.move.line",
+        copy=False,
+    )
     currency_id = fields.Many2one(
         related="vendor_bill_id.currency_id",
         compute_sudo=True,
