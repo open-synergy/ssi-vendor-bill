@@ -183,9 +183,7 @@ class TestVendorBillLine(YamlTransactionCase):
             {
                 "code": "VBLE5%d" % self.env["account.account"].search_count([]),
                 "name": "P5 Vendor Bill Line Expense",
-                "user_type_id": self.env.ref(
-                    "account.data_account_type_expenses"
-                ).id,
+                "user_type_id": self.env.ref("account.data_account_type_expenses").id,
             }
         )
         with self.assertRaises(NotNullViolation):

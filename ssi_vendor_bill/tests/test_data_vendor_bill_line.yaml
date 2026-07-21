@@ -329,8 +329,7 @@ scenarios:
         values:
           name: "Vendor Bill Line Plain User"
           login:
-            "EVAL: 'vendor_bill_line_plain_user_%d' %
-            env['res.users'].search_count([])"
+            "EVAL: 'vendor_bill_line_plain_user_%d' % env['res.users'].search_count([])"
           groups_id:
             - - 6
               - 0
