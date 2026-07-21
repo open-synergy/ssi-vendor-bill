@@ -27,6 +27,7 @@
         "ssi_product_line_account_mixin",
         "ssi_accounting_entry_mixin",
         "ssi_transaction_pricelist_mixin",
+        "base_automation",
     ],
     "data": [
         "security/ir_module_category/vendor_bill.xml",
@@ -39,6 +40,8 @@
         "sequence_template/vendor_bill.xml",
         "approval_template/vendor_bill.xml",
         "policy_template/vendor_bill.xml",
+        "data/ir_actions_server.xml",
+        "data/base_automation.xml",
         "views/vendor_bill.xml",
         "views/vendor_bill_type_views.xml",
     ],

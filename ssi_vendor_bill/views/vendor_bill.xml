@@ -108,6 +108,19 @@
                         <field name="amount_total" />
                     </group>
                 </page>
+                <page name="accounting" string="Accounting">
+                    <group name="accounting_1" colspan="4" col="2">
+                        <group name="accounting_1_1" colspan="1" col="2">
+                            <field name="move_id" />
+                            <field name="payable_move_line_id" />
+                            <field name="realized" />
+                        </group>
+                        <group name="accounting_1_2" colspan="1" col="2">
+                            <field name="amount_realized" />
+                            <field name="amount_residual" />
+                        </group>
+                    </group>
+                </page>
             </xpath>
         </data>
     </field>

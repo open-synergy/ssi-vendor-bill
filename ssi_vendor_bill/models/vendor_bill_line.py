@@ -21,8 +21,26 @@ class VendorBillLine(models.Model):
     _description = "Vendor Bill - Line"
     _inherit = [
         "mixin.product_line_account",
+        "mixin.account_move_single_line",
     ]
     _order = "vendor_bill_id, sequence, id"
+
+    # Accounting Entry Mixin
+    _move_id_field_name = "move_id"
+    _account_id_field_name = "account_id"
+    _partner_id_field_name = "partner_id"
+    _analytic_account_id_field_name = "analytic_account_id"
+    _currency_id_field_name = "currency_id"
+    _company_currency_id_field_name = "company_currency_id"
+    _company_id_field_name = "company_id"
+    _amount_currency_field_name = "price_subtotal"
+    _date_field_name = "date"
+    _label_field_name = "name"
+    _product_id_field_name = "product_id"
+    _uom_id_field_name = "uom_id"
+    _quantity_field_name = "uom_quantity"
+    _price_unit_field_name = "price_unit"
+    _normal_amount = "debit"
 
     vendor_bill_id = fields.Many2one(
         string="# Vendor Bill",
@@ -33,6 +51,10 @@ class VendorBillLine(models.Model):
 
     # Convenience fields mirrored from the header, following the pattern
     # of employee_business_trip.per_diem / employee_business_trip.tax.
+    move_id = fields.Many2one(
+        related="vendor_bill_id.move_id",
+        compute_sudo=True,
+    )
     currency_id = fields.Many2one(
         related="vendor_bill_id.currency_id",
         compute_sudo=True,

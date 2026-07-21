@@ -8,6 +8,11 @@ setup:
       xml_id: "account.data_account_type_payable"
       save_as: "payable_acc_type"
 
+    - step: "Get expense account type"
+      action: "ref"
+      xml_id: "account.data_account_type_expenses"
+      save_as: "expense_acc_type"
+
     # `setup:` replays before every scenario in the same transaction (no
     # rollback in between), so a fixed `code` would collide with the
     # previous scenario's record on the 2nd+ replay (code is unique per
@@ -22,6 +27,30 @@ setup:
         user_type_id: "REC: payable_acc_type.id"
         reconcile: true
 
+    # `account_id` on a detail line (mixin.product_line_account) is
+    # required=True; a handful of scenarios below need one to actually
+    # open the bill (post_open now creates a journal entry from line_ids).
+    - step: "Create line expense account"
+      action: "create"
+      model: "account.account"
+      save_as: "line_account"
+      values:
+        code: "EVAL: 'VBHE%d' % env['account.account'].search_count([])"
+        name: "Test Vendor Bill Header Expense"
+        user_type_id: "REC: expense_acc_type.id"
+
+    # Contra side of the manually-created payment entries used to exercise
+    # the realized/reconciliation automation -- any non-reconcile account
+    # works, its own type does not matter for these scenarios.
+    - step: "Create a contra account for manual payment entries"
+      action: "create"
+      model: "account.account"
+      save_as: "contra_account"
+      values:
+        code: "EVAL: 'VBCT%d' % env['account.account'].search_count([])"
+        name: "Test Vendor Bill Contra"
+        user_type_id: "REC: expense_acc_type.id"
+
     - step: "Create purchase journal"
       action: "create"
       model: "account.journal"
@@ -32,6 +61,17 @@ setup:
           env['account.journal'].search_count([])"
         code: "EVAL: 'VBJ%d' % env['account.journal'].search_count([])"
         type: "purchase"
+
+    - step: "Create a general journal for manual payment entries"
+      action: "create"
+      model: "account.journal"
+      save_as: "general_journal"
+      values:
+        name:
+          "EVAL: 'Test Vendor Bill General Journal %d' %
+          env['account.journal'].search_count([])"
+        code: "EVAL: 'VBGJ%d' % env['account.journal'].search_count([])"
+        type: "general"
 
     - step: "Create vendor bill type"
       action: "create"
@@ -124,6 +164,21 @@ scenarios:
 
   - name: "Compute allowed currency ids from type's manual currency list"
     steps:
+      # SGD is inactive by default on a fresh database; a manual m2m list
+      # only shows up on read once its currency is active (Odoo filters
+      # x2many reads by `active` unless told otherwise), so activate it
+      # first -- exactly what a real user would do in Settings.
+      - step: "Get SGD currency"
+        action: "ref"
+        xml_id: "base.SGD"
+        save_as: "sgd_currency"
+
+      - step: "Activate SGD so it can appear in the manual currency list"
+        action: "write"
+        target: "sgd_currency"
+        values:
+          active: true
+
       - step: "Create a second vendor bill type with a manual currency allow-list"
         action: "create"
         model: "vendor_bill_type"
@@ -165,7 +220,9 @@ scenarios:
               - "RECORDSET: base.EUR"
               - "RECORDSET: base.SGD"
 
-  - name: "Confirm then approve moves bill from draft to open with a document number"
+  - name:
+      "Confirm then approve moves bill from draft to open, assigns a document number,
+      and posts a journal entry"
     steps:
       - step: "Create vendor bill"
         action: "create"
@@ -180,6 +237,17 @@ scenarios:
           pricelist_id: "REF: product.list0"
           journal_id: "REC: journal.id"
           payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line so the bill has something to post"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 150000.0
 
       - step: "Confirm the bill"
         action: "call"
@@ -213,6 +281,24 @@ scenarios:
             operator: "not_equals"
             expected: "/"
 
+      - step: "Assert a posted journal entry with the payable move line was created"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_truthy"
+          move_id.state:
+            type: "value"
+            expected: "posted"
+          payable_move_line_id:
+            type: "value"
+            operator: "is_truthy"
+          payable_move_line_id.date_maturity:
+            type: "value"
+            expected: 2024-02-15
+
   - name: "Done moves bill from open to done"
     steps:
       - step: "Create vendor bill"
@@ -229,11 +315,27 @@ scenarios:
           journal_id: "REC: journal.id"
           payable_account_id: "REC: account.id"
 
+      - step: "Create a detail line so the bill stays open after approval"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 120000.0
+
       - step: "Confirm the bill"
         action: "call"
         target: "bill"
         method: "action_confirm"
         as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
 
       - step: "Approve the bill"
         action: "call"
@@ -278,6 +380,11 @@ scenarios:
         target: "bill"
         method: "action_confirm"
         as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
 
       - step: "Reject the bill"
         action: "call"
@@ -402,7 +509,7 @@ scenarios:
             - - 6
               - 0
               - - "REF: base.group_user"
-                - "ssi_vendor_bill.vendor_bill_company_group"
+                - "REF: ssi_vendor_bill.vendor_bill_company_group"
 
       - step: "Bill owned by other company is not visible"
         action: "search"
@@ -449,3 +556,440 @@ scenarios:
           state:
             type: "value"
             expected: "cancel"
+
+  - name:
+      "Approving a bill without detail lines skips straight to Paid without a journal
+      entry"
+    steps:
+      - step: "Create vendor bill without any detail lines"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approving the bill skips straight to Paid"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "done"
+
+      - step: "No journal entry was created"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_falsy"
+
+  - name:
+      "Re-running action_open on an already open bill does not duplicate the journal
+      entry"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 250000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill and post the journal entry"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Capture the journal entry created on open"
+        action: "search"
+        model: "account.move"
+        domain:
+          - ["id", "=", "REC: bill.move_id.id"]
+        save_as: "first_move"
+        expect_count: 1
+
+      - step: "Re-run action_open directly"
+        action: "call"
+        target: "bill"
+        method: "action_open"
+        context:
+          bypass_policy_check: true
+
+      - step: "move_id is unchanged after re-running action_open"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id:
+            type: "m2o"
+            expected: "REC: first_move"
+
+      - step: "Only one journal entry exists for this bill's journal"
+        action: "search"
+        model: "account.move"
+        domain:
+          - ["journal_id", "=", "REC: journal.id"]
+        save_as: "moves_in_journal"
+        expect_count: 1
+
+  - name: "Cancelling an open bill through the reason wizard deletes its journal entry"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 175000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill and post the journal entry"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Capture the journal entry before cancelling"
+        action: "search"
+        model: "account.move"
+        domain:
+          - ["id", "=", "REC: bill.move_id.id"]
+        save_as: "posted_move"
+        expect_count: 1
+
+      - step: "Create a cancel reason"
+        action: "create"
+        model: "base.cancel_reason"
+        save_as: "reason"
+        values:
+          name: "Test Vendor Bill Cancel Reason (open)"
+          code: "/"
+
+      - step: "Cancel through the reason wizard as validator"
+        action: "wizard"
+        model: "base.select_cancel_reason"
+        target: "bill"
+        as_user: "base.user_admin"
+        values:
+          cancel_reason_id: "REC: reason"
+        method: "action_confirm"
+        asserts:
+          state:
+            type: "value"
+            expected: "cancel"
+
+      - step: "The bill no longer references a journal entry"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_falsy"
+
+      - step: "The journal entry itself no longer exists"
+        action: "search"
+        model: "account.move"
+        domain:
+          - ["id", "=", "REC: posted_move.id"]
+        save_as: "found_move"
+        expect_count: 0
+
+  - name:
+      "Full reconciliation of the payable journal item marks the bill done, and undoing
+      it reopens it"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 500000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill and post the journal entry"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Get the bill's payable journal item"
+        action: "search"
+        model: "account.move.line"
+        domain:
+          - ["id", "=", "REC: bill.payable_move_line_id.id"]
+        save_as: "payable_ml"
+        expect_count: 1
+
+      - step: "Create a manual payment entry debiting the payable account"
+        action: "create"
+        model: "account.move"
+        save_as: "payment_move"
+        values:
+          journal_id: "REC: general_journal.id"
+          date: 2024-02-01
+          line_ids:
+            - - 0
+              - 0
+              - name: "Payment"
+                account_id: "REC: account.id"
+                partner_id: "REC: vendor.id"
+                debit: 500000.0
+            - - 0
+              - 0
+              - name: "Payment contra"
+                account_id: "REC: contra_account.id"
+                credit: 500000.0
+
+      - step: "Post the payment entry"
+        action: "call"
+        target: "payment_move"
+        method: "action_post"
+
+      - step: "Get the payment's payable-side journal item"
+        action: "search"
+        model: "account.move.line"
+        domain:
+          - ["move_id", "=", "REC: payment_move.id"]
+          - ["account_id", "=", "REC: account.id"]
+        save_as: "payment_ml"
+        expect_count: 1
+
+      - step: "Combine both journal items to reconcile"
+        action: "search"
+        model: "account.move.line"
+        domain:
+          - ["id", "in", ["REC: payable_ml.id", "REC: payment_ml.id"]]
+        save_as: "to_reconcile"
+        expect_count: 2
+
+      - step: "Reconcile the payable line against the payment"
+        action: "call"
+        target: "to_reconcile"
+        method: "reconcile"
+
+      - step: "Bill becomes done once fully reconciled"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          realized:
+            type: "value"
+            expected: true
+          state:
+            type: "value"
+            expected: "done"
+
+      - step: "Undo the reconciliation"
+        action: "call"
+        target: "payable_ml"
+        method: "remove_move_reconcile"
+
+      - step: "Bill reopens once the reconciliation is undone"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          realized:
+            type: "value"
+            expected: false
+          state:
+            type: "value"
+            expected: "open"
+
+  - name: "Opening a bill whose line account belongs to a different company is rejected"
+    steps:
+      - step: "Create another company"
+        action: "create"
+        model: "res.company"
+        save_as: "other_company"
+        values:
+          name: "Test Vendor Bill Cross-Company"
+
+      - step: "Create an expense account owned by the other company"
+        action: "create"
+        model: "account.account"
+        save_as: "foreign_account"
+        values:
+          code: "EVAL: 'VBFC%d' % env['account.account'].search_count([])"
+          name: "Test Vendor Bill Foreign Expense"
+          user_type_id: "REC: expense_acc_type.id"
+          company_id: "REC: other_company.id"
+
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line using the foreign account"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Cross-company Line"
+          account_id: "REC: foreign_account.id"
+          uom_quantity: 1
+          price_unit: 100000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step:
+          "Approving the bill fails while creating the journal item for the
+          foreign-company account"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        expect_error:
+          type: "UserError"
+          message_contains: "Incompatible companies"
+
+      - step: "move_id was not set"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_falsy"

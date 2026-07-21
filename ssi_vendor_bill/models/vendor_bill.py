@@ -33,6 +33,7 @@ class VendorBill(models.Model):
         "mixin.many2one_configurator",
         "mixin.transaction_pricelist",
         "mixin.account_move",
+        "mixin.account_move_single_line",
     ]
 
     # A. Atribut Multiple Approval
@@ -85,6 +86,23 @@ class VendorBill(models.Model):
     _tax_source_recordset_field_name = "line_ids"
     _price_unit_field_name = "price_unit"
     _quantity_field_name = "uom_quantity"
+
+    # E3. Atribut Accounting Entry (mixin.account_move_single_line -- payable
+    # journal item created on the header itself)
+    _journal_id_field_name = "journal_id"
+    _move_id_field_name = "move_id"
+    _accounting_date_field_name = "date"
+    _currency_id_field_name = "currency_id"
+    _company_currency_id_field_name = "company_currency_id"
+    _account_id_field_name = "payable_account_id"
+    _partner_id_field_name = "partner_id"
+    _analytic_account_id_field_name = "analytic_account_id"
+    _amount_currency_field_name = "amount_total"
+    _date_field_name = "date"
+    _label_field_name = "name"
+    _date_due_field_name = "date_due"
+    _need_date_due = True
+    _normal_amount = "credit"
 
     # F. Definisi Field
     state = fields.Selection(
@@ -240,6 +258,51 @@ class VendorBill(models.Model):
         currency_field="currency_id",
         help="Untaxed amount plus tax amount.",
     )
+    move_id = fields.Many2one(
+        string="Move",
+        comodel_name="account.move",
+        readonly=True,
+        copy=False,
+        help="Journal entry generated when this document is opened. Left "
+        "empty for documents without detail lines, which move directly "
+        "to Paid without waiting for reconciliation.",
+    )
+    payable_move_line_id = fields.Many2one(
+        string="Payable Move Line",
+        comodel_name="account.move.line",
+        readonly=True,
+        copy=False,
+        help="Journal item on the payable account created together with "
+        "``move_id``. Its reconciliation status drives the automatic "
+        "Unpaid/Paid transition.",
+    )
+    realized = fields.Boolean(
+        string="Realized",
+        related="payable_move_line_id.reconciled",
+        store=True,
+        compute_sudo=True,
+        help="Technical flag mirroring whether the payable journal item "
+        "has been fully reconciled. Drives the automatic done/open state "
+        "transition through base.automation.",
+    )
+    amount_realized = fields.Monetary(
+        string="Realized Amount",
+        compute="_compute_realized",
+        store=True,
+        compute_sudo=True,
+        currency_field="currency_id",
+        help="Portion of the total amount already settled, derived from "
+        "the payable journal item's residual amount.",
+    )
+    amount_residual = fields.Monetary(
+        string="Residual Amount",
+        compute="_compute_realized",
+        store=True,
+        compute_sudo=True,
+        currency_field="currency_id",
+        help="Portion of the total amount still outstanding on the "
+        "payable journal item.",
+    )
 
     # G. Compute Methods
     @api.depends("type_id")
@@ -296,6 +359,25 @@ class VendorBill(models.Model):
             record.amount_tax = amount_tax
             record.amount_total = amount_untaxed + amount_tax
 
+    @api.depends(
+        "payable_move_line_id.amount_residual_currency",
+        "payable_move_line_id.reconciled",
+        "amount_total",
+    )
+    def _compute_realized(self):
+        for record in self:
+            amount_realized = 0.0
+            amount_residual = 0.0
+
+            if record.payable_move_line_id:
+                amount_residual = (
+                    -1.0 * record.payable_move_line_id.amount_residual_currency
+                )
+                amount_realized = record.amount_total - amount_residual
+
+            record.amount_realized = amount_realized
+            record.amount_residual = amount_residual
+
     # H. Onchange Methods
     @api.onchange("type_id")
     def onchange_journal_id(self):
@@ -323,6 +405,42 @@ class VendorBill(models.Model):
     def _01_compute_tax(self):
         self.ensure_one()
         self._recompute_standard_tax()
+
+    # I3. Post-open Hooks: Create Accounting Entry / Skip Straight to Done
+    @ssi_decorator.post_open_action()
+    def _10_create_accounting_entry(self):
+        self.ensure_one()
+
+        if not self.line_ids or self.move_id:
+            return True
+
+        self._create_standard_move()  # Mixin
+        ml = self._create_standard_ml()  # Mixin
+        self.write(
+            {
+                "payable_move_line_id": ml.id,
+            }
+        )
+
+        for line in self.line_ids:
+            line._create_standard_ml()  # Mixin
+
+        for tax in self.tax_ids:
+            tax._create_standard_ml()  # Mixin
+
+        self._post_standard_move()  # Mixin
+
+    @ssi_decorator.post_open_action()
+    def _20_skip_open(self):
+        self.ensure_one()
+        if not self.move_id:
+            self.action_done()
+
+    # I4. Post-cancel Hook: Delete Accounting Entry
+    @ssi_decorator.post_cancel_action()
+    def _30_delete_accounting_entry(self):
+        self.ensure_one()
+        self._delete_standard_move()  # Mixin
 
     # J. Decorator: Insert Form Element
     @ssi_decorator.insert_on_form_view()
