@@ -18,9 +18,15 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[ssi_vendor_bill](ssi_vendor_bill/) | 14.0.1.2.0 |  | Vendor Bill
+[ssi_vendor_bill](ssi_vendor_bill/) | 14.0.2.0.0 |  | Vendor Bill
 [ssi_vendor_bill_claude_code](ssi_vendor_bill_claude_code/) | 14.0.1.1.0 |  | Import vendor bills from PDF/PNG using the odoo-vendor-bill-claude-code-extract AI service, processed asynchronously via queue_job
-[ssi_vendor_bill_operating_unit](ssi_vendor_bill_operating_unit/) | 14.0.1.0.2 |  | Vendor Bill + Operating Unit
+
+
+Unported addons
+---------------
+addon | version | maintainers | summary
+--- | --- | --- | ---
+[ssi_vendor_bill_operating_unit](ssi_vendor_bill_operating_unit/) | 14.0.1.0.2 (unported) |  | Vendor Bill + Operating Unit
 
 [//]: # (end addons)
 
