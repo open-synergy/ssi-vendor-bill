@@ -32,6 +32,7 @@ msgstr ""
 
 #. module: ssi_vendor_bill
 #: model_terms:ir.ui.view,arch_db:ssi_vendor_bill.vendor_bill_type_view_form
+#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill.vendor_bill_view_form
 msgid "Accounting"
 msgstr ""
 
@@ -43,9 +44,21 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:base.automation,name:ssi_vendor_bill.vendor_bill_open_2_done
+#: model:ir.actions.server,name:ssi_vendor_bill.vendor_bill_action_done
+msgid "Action Done"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__message_needaction
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__message_needaction
 msgid "Action Needed"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:base.automation,name:ssi_vendor_bill.vendor_bill_done_2_open
+#: model:ir.actions.server,name:ssi_vendor_bill.vendor_bill_action_open
+msgid "Action Open"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -533,8 +546,26 @@ msgid "Journal"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_tax__account_move_line_id
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_tax__move_line_id
 msgid "Journal Item"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__move_id
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill_line__move_id
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill_tax__move_id
+msgid ""
+"Journal entry generated when this document is opened. Left empty for "
+"documents without detail lines, which move directly to Paid without waiting "
+"for reconciliation."
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__payable_move_line_id
+msgid ""
+"Journal item on the payable account created together with ``move_id``. Its "
+"reconciliation status drives the automatic Unpaid/Paid transition."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -665,6 +696,13 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__move_id
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_line__move_id
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_tax__move_id
+msgid "Move"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__my_activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__my_activity_date_deadline
 msgid "My Activity Deadline"
@@ -759,6 +797,11 @@ msgid "Payable Account"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__payable_move_line_id
+msgid "Payable Move Line"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__payable_account_id
 msgid ""
 "Payable account credited for the total amount owed to the vendor when this "
@@ -768,6 +811,19 @@ msgstr ""
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__policy_template_id
 msgid "Policy Template"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__amount_realized
+msgid ""
+"Portion of the total amount already settled, derived from the payable "
+"journal item's residual amount."
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__amount_residual
+msgid ""
+"Portion of the total amount still outstanding on the payable journal item."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -909,6 +965,16 @@ msgid "Quantity"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__realized
+msgid "Realized"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_realized
+msgid "Realized Amount"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__partner_document_number
 msgid ""
 "Reference number of the original document issued by the vendor (e.g. their "
@@ -927,6 +993,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__rejected
 #: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill__state__reject
 msgid "Rejected"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_residual
+msgid "Residual Amount"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -1052,6 +1123,14 @@ msgstr ""
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__tax_ids
 msgid "Taxes"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__realized
+msgid ""
+"Technical flag mirroring whether the payable journal item has been fully "
+"reconciled. Drives the automatic done/open state transition through "
+"base.automation."
 msgstr ""
 
 #. module: ssi_vendor_bill
