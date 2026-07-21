@@ -1,0 +1,264 @@
+options:
+  auto_refresh: true
+
+setup:
+  steps:
+    - step: "Get payable account type"
+      action: "ref"
+      xml_id: "account.data_account_type_payable"
+      save_as: "payable_acc_type"
+
+    # `setup:` replays before every scenario in the same transaction (no
+    # rollback in between), so a fixed `code` would collide with the
+    # previous scenario's record on the 2nd+ replay (code is unique per
+    # company). Generate a fresh, never-colliding code/name on each replay.
+    - step: "Create payable account"
+      action: "create"
+      model: "account.account"
+      save_as: "payable_account"
+      values:
+        code: "EVAL: 'VBTP%d' % env['account.account'].search_count([])"
+        name: "Vendor Bill Type Test Payable"
+        user_type_id: "REC: payable_acc_type.id"
+        reconcile: true
+
+    - step: "Create purchase journal"
+      action: "create"
+      model: "account.journal"
+      save_as: "journal"
+      values:
+        name:
+          "EVAL: 'Test Vendor Bill Type Purchase Journal %d' %
+          env['account.journal'].search_count([])"
+        code: "EVAL: 'VBTJ%d' % env['account.journal'].search_count([])"
+        type: "purchase"
+
+    - step: "Create product 1"
+      action: "create"
+      model: "product.product"
+      save_as: "product_1"
+      values:
+        name: "Vendor Bill Type Test Product 1"
+
+    - step: "Create product 2"
+      action: "create"
+      model: "product.product"
+      save_as: "product_2"
+      values:
+        name: "Vendor Bill Type Test Product 2"
+
+scenarios:
+  - name: "Create Vendor Bill Type"
+    steps:
+      - step: "Create type"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "vb_type"
+        values:
+          name: "Test Vendor Bill Type"
+          code: "VBT001"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Assert type created and active"
+        action: "assert"
+        target: "vb_type"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          name:
+            type: "value"
+            expected: "Test Vendor Bill Type"
+          active:
+            type: "value"
+            expected: true
+          journal_id:
+            type: "m2o"
+            expected: "REC: journal"
+          payable_account_id:
+            type: "m2o"
+            expected: "REC: payable_account"
+
+  - name: "Edit and delete Vendor Bill Type"
+    steps:
+      - step: "Create type"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "vb_type"
+        values:
+          name: "Editable Type"
+          code: "VBT002"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Write new name"
+        action: "write"
+        target: "vb_type"
+        values:
+          name: "Updated Type Name"
+
+      - step: "Assert name updated"
+        action: "assert"
+        target: "vb_type"
+        asserts:
+          name:
+            type: "value"
+            expected: "Updated Type Name"
+
+      - step: "Delete type"
+        action: "unlink"
+        target: "vb_type"
+
+      - step: "Verify type deleted"
+        action: "search"
+        model: "vendor_bill_type"
+        domain: [["code", "=", "VBT002"]]
+        save_as: "result"
+        expect_count: 0
+
+  - name: "Selection method and configurator fields default to domain"
+    steps:
+      - step: "Create type without selection methods"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "vb_type"
+        values:
+          name: "Default Config Type"
+          code: "VBT003"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Assert all three selection methods default to domain"
+        action: "assert"
+        target: "vb_type"
+        asserts:
+          product_selection_method:
+            type: "value"
+            expected: "domain"
+          product_domain:
+            type: "value"
+            expected: "[]"
+          product_python_code:
+            type: "value"
+            expected: "result = []"
+          currency_selection_method:
+            type: "value"
+            expected: "domain"
+          currency_domain:
+            type: "value"
+            expected: "[]"
+          currency_python_code:
+            type: "value"
+            expected: "result = []"
+          pricelist_selection_method:
+            type: "value"
+            expected: "domain"
+          pricelist_domain:
+            type: "value"
+            expected: "[]"
+          pricelist_python_code:
+            type: "value"
+            expected: "result = []"
+
+  - name: "Manual product selection stores the chosen products"
+    steps:
+      - step: "Create type with manual product selection"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "vb_type"
+        values:
+          name: "Manual Product Type"
+          code: "VBT004"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+          product_selection_method: "manual"
+          product_ids:
+            - - 6
+              - 0
+              - - "REC: product_1.id"
+                - "REC: product_2.id"
+
+      - step: "Assert both products are stored"
+        action: "assert"
+        target: "vb_type"
+        asserts:
+          product_selection_method:
+            type: "value"
+            expected: "manual"
+          product_ids:
+            type: "m2m"
+            check: "exact"
+            expected_records:
+              - "REC: product_1"
+              - "REC: product_2"
+
+  # "Create without journal_id is rejected" is NOT expressible in YAML: a
+  # missing required Many2one fails at the DB NOT NULL constraint
+  # (psycopg2.errors.NotNullViolation), which is outside expect_error's 12
+  # supported types (L-22). See test_vendor_bill_type.py
+  # (test_create_without_journal_id_is_rejected, P5).
+
+  - name: "Write an invalid selection value is rejected"
+    steps:
+      - step: "Create type"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "vb_type"
+        values:
+          name: "Invalid Selection Type"
+          code: "VBT006"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Write an out-of-selection currency_selection_method must fail"
+        action: "write"
+        target: "vb_type"
+        expect_error:
+          type: "ValueError"
+        values:
+          currency_selection_method: "otomatis"
+
+  - name:
+      "Internal user without vendor_bill_type_group can read but not create (negative
+      ACL)"
+    steps:
+      - step: "Create plain internal user (no vendor_bill_type group)"
+        action: "create"
+        model: "res.users"
+        save_as: "no_group_user"
+        values:
+          name: "Plain Internal User Vendor Bill Type"
+          login: "vendor_bill_type_no_group_user"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+
+      - step: "Creating vendor_bill_type without the group raises AccessError"
+        action: "create"
+        model: "vendor_bill_type"
+        as_user: "no_group_user"
+        expect_error:
+          type: "AccessError"
+        values:
+          name: "Denied Type"
+          code: "VBT007"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Create the same type as admin so it exists to be read"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "vb_type"
+        values:
+          name: "Readable Type"
+          code: "VBT008"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Reading the type without the group still succeeds"
+        action: "call"
+        target: "vb_type"
+        method: "read"
+        as_user: "no_group_user"

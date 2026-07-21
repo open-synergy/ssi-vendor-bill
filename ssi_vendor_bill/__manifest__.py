@@ -15,13 +15,17 @@
     "application": False,
     "depends": [
         "ssi_financial_accounting",
+        "ssi_master_data_mixin",
     ],
     "data": [
         "security/ir_module_category/vendor_bill.xml",
         "security/res_groups/vendor_bill.xml",
+        "security/res_groups/vendor_bill_type.xml",
         "security/ir.model.access.csv",
+        "security/ir_model_access/vendor_bill_type.xml",
         "security/ir_rule/vendor_bill.xml",
         "views/vendor_bill_views.xml",
+        "views/vendor_bill_type_views.xml",
     ],
     "demo": [],
     "uninstall_hook": "uninstall_hook",
