@@ -197,7 +197,7 @@ scenarios:
               - 0
               - - "REF: base.group_user"
                 - "REF: ssi_financial_accounting.bill_user_group"
-                - "REF: ssi_financial_accounting_operating_unit.bill_ou_group"
+                - "REF: ssi_vendor_bill_operating_unit.vendor_bill_ou_group"
           assigned_operating_unit_ids:
             - - 6
               - 0
@@ -215,7 +215,7 @@ scenarios:
               - 0
               - - "REF: base.group_user"
                 - "REF: ssi_financial_accounting.bill_user_group"
-                - "REF: ssi_financial_accounting_operating_unit.bill_ou_group"
+                - "REF: ssi_vendor_bill_operating_unit.vendor_bill_ou_group"
           assigned_operating_unit_ids:
             - - 6
               - 0

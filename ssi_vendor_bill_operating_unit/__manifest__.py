@@ -18,6 +18,7 @@
         "ssi_financial_accounting_operating_unit",
     ],
     "data": [
+        "security/res_group/vendor_bill.xml",
         "security/ir_rule/vendor_bill.xml",
         "views/vendor_bill_views.xml",
     ],
