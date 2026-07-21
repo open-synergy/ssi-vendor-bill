@@ -24,6 +24,9 @@
         "ssi_transaction_partner_mixin",
         "ssi_company_currency_mixin",
         "ssi_m2o_configurator_mixin",
+        "ssi_product_line_account_mixin",
+        "ssi_accounting_entry_mixin",
+        "ssi_transaction_pricelist_mixin",
     ],
     "data": [
         "security/ir_module_category/vendor_bill.xml",
