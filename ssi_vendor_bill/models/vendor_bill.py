@@ -79,6 +79,49 @@ class VendorBill(models.Model):
     def write(self, vals):  # pylint: disable=method-required-super
         return self._as_account_move().sudo().write(vals)
 
+    def onchange(  # pylint: disable=method-required-super
+        self, values, field_name, field_onchange
+    ):
+        """Run the whole onchange machinery on ``account.move`` instead.
+
+        ``invoice_line_ids`` and ``line_ids`` are One2many fields whose
+        inverse ``account.move.line.move_id`` is a Many2one pointing at
+        ``account.move`` -- not at ``vendor_bill``. The ORM onchange
+        machinery builds a virtual record with ``self.new(...)``, and on a
+        ``vendor_bill`` virtual record the One2many/Many2one pair straddles
+        two different models. The inverse bookkeeping then updates the wrong
+        model's cache, so a line added by the client
+        (``invoice_line_ids: [(0, "virtual_1", {...})]``) is missing from the
+        final snapshot and the server answers with a bare ``[(5,)]``. The web
+        client crashes on that empty list in ``FieldOne2Many.reset``.
+
+        Running the onchange through a genuine ``account.move`` recordset
+        (same physical rows, same ids -- see ``_as_account_move``) keeps the
+        One2many and its inverse on one and the same model, so newly added
+        lines survive and come back as ``(0, ...)`` commands. The returned
+        payload only holds field names and values, which are identical on
+        both models, so it can be handed back to the client untouched.
+
+        ``sudo()`` mirrors ``create``/``write``: a user holding only the
+        ``vendor_bill`` ACL has no read access to ``account.move`` nor to
+        ``account.move.line``, and without it the onchange would raise an
+        ``AccessError`` for exactly the users this model exists for.
+
+        ``default_move_type`` has to be forced for the same reason
+        ``create`` forces ``move_type``: on its first call (falsy
+        ``field_name``) the onchange machinery fills the missing fields
+        from ``default_get``, and delegating hands that over to
+        ``account.move``, whose own default is ``entry``. That would
+        silently override the ``in_invoice`` default this model declares,
+        and every later onchange would then recompute the document as a
+        plain journal entry -- no tax line, no payable counterpart, hence
+        an unbalanced entry on save. Forcing the key keeps the delegated
+        defaults in step with ``create``, whatever context the caller had.
+        """
+        account_move = self._as_account_move()
+        account_move = account_move.sudo().with_context(default_move_type="in_invoice")
+        return account_move.onchange(values, field_name, field_onchange)
+
     def action_post(self):
         return self._as_account_move().sudo().action_post()
 

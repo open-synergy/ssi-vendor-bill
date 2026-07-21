@@ -425,3 +425,112 @@ scenarios:
         as_user: "no_group_user"
         expect_error:
           type: "AccessError"
+
+  # Regression guard for the onchange() override. invoice_line_ids is a
+  # One2many whose inverse (account.move.line.move_id) points at
+  # account.move, not at vendor_bill. Before onchange() delegated to
+  # account.move, the server answered a freshly added line with a bare
+  # [(5,)] -- the line was dropped and the web client crashed in
+  # FieldOne2Many.reset. These scenarios assert the line survives.
+  - name: "Adding an invoice line on a new bill form keeps the line"
+    steps:
+      - step: "Fill a new vendor bill form and add one invoice line"
+        action: "form"
+        model: "vendor_bill"
+        save_as: "bill"
+        ops:
+          - set: {partner_id: "REC: vendor"}
+          - set: {journal_id: "REC: journal"}
+          - set: {invoice_date: "EVAL: datetime.now().date()"}
+          - new:
+              field: "invoice_line_ids"
+              values:
+                name: "Form Test Line"
+                account_id: "REC: expense_account"
+                quantity: 3
+                price_unit: 25000.0
+          - assert:
+              invoice_line_ids:
+                type: "o2m"
+                check: "count"
+                expected_count: 1
+
+      - step: "Saved bill keeps the line and totals it"
+        action: "assert"
+        target: "bill"
+        asserts:
+          invoice_line_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 1
+          amount_untaxed:
+            type: "value"
+            expected: 75000.0
+
+  - name: "Adding a second invoice line on an existing bill keeps both lines"
+    steps:
+      - step: "Create draft bill with one line"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+          invoice_date: "EVAL: datetime.now().date()"
+          invoice_line_ids:
+            - - 0
+              - 0
+              - name: "First Line"
+                quantity: 1
+                price_unit: 10000.0
+                account_id: "REC: expense_account.id"
+
+      - step: "Add a second line through the form"
+        action: "form"
+        target: "bill"
+        ops:
+          - new:
+              field: "invoice_line_ids"
+              values:
+                name: "Second Line"
+                account_id: "REC: expense_account"
+                quantity: 2
+                price_unit: 20000.0
+          - assert:
+              invoice_line_ids:
+                type: "o2m"
+                check: "count"
+                expected_count: 2
+
+      - step: "Saved bill holds both lines"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          invoice_line_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 2
+          amount_untaxed:
+            type: "value"
+            expected: 50000.0
+
+  - name: "Posting a vendor bill without any invoice line is rejected"
+    steps:
+      - step: "Create draft bill without any invoice line"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "empty_bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+          invoice_date: "EVAL: datetime.now().date()"
+
+      - step: "Posting without a line raises UserError"
+        action: "call"
+        target: "empty_bill"
+        method: "action_post"
+        as_user: "base.user_admin"
+        expect_error:
+          type: "UserError"
+          message_contains: "add a line before posting"
