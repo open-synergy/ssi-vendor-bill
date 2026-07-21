@@ -47,6 +47,82 @@ class VendorBill(models.Model):
         default="in_invoice",
     )
 
+    account_move_id = fields.Many2one(
+        comodel_name="account.move",
+        compute="_compute_account_move_id",
+        string="Account Move",
+        help="Same physical row, addressed through the generic "
+        "account.move model. Used to make the mail thread (messages, "
+        "followers, activities) point at account.move so it has a single "
+        "owner model instead of being split between vendor_bill and "
+        "account.move.",
+    )
+    # mail.thread/mail.activity.mixin fields are plain One2many relying on
+    # an implicit ORM filter that matches the *model name of this
+    # recordset* (`vendor_bill`) against `mail.message.model` /
+    # `mail.followers.res_model` / `mail.activity.res_model`. Since
+    # create()/write()/action_post() delegate to a genuine account.move
+    # recordset (see _as_account_move), messages/followers/activities
+    # produced by those calls are owned by account.move and would never
+    # show up through that implicit filter.
+    #
+    # These are redeclared as plain computed fields (NOT `related=`) that
+    # fetch account.move's value directly. A `related="account_move_id...`
+    # field would look correct, but Odoo also registers it in the global
+    # field-dependency graph: creating a mail.message/mail.followers
+    # ANYWHERE in the database then makes the ORM try to search
+    # vendor_bill by account_move_id to find affected records to
+    # recompute -- and account_move_id, a non-stored field, cannot be
+    # searched, logging "Non-stored field ... cannot be searched" (an
+    # ERROR-level log line that fails the `oca_checklog_odoo` CI job) on
+    # every such create in the whole system, not just on vendor_bill.
+    # `@api.depends()` (no dependencies) keeps these out of that graph
+    # entirely; the value is simply recomputed each time it is read.
+    message_follower_ids = fields.One2many(
+        compute="_compute_message_follower_ids",
+    )
+    message_ids = fields.One2many(
+        compute="_compute_message_ids",
+    )
+    activity_ids = fields.One2many(
+        compute="_compute_activity_ids",
+    )
+
+    @api.depends()
+    def _compute_account_move_id(self):
+        for record in self:
+            record.account_move_id = record._as_account_move()
+
+    @api.depends()
+    def _compute_message_follower_ids(self):
+        for record in self:
+            record.message_follower_ids = record._as_account_move().message_follower_ids
+
+    @api.depends()
+    def _compute_message_ids(self):
+        for record in self:
+            record.message_ids = record._as_account_move().message_ids
+
+    @api.depends()
+    def _compute_activity_ids(self):
+        for record in self:
+            record.activity_ids = record._as_account_move().activity_ids
+
+    def _compute_message_attachment_count(self):
+        """Override account.move's own count with the delegated value.
+
+        ``message_attachment_count`` already carries
+        ``compute="_compute_message_attachment_count"`` from mail.thread, so
+        redefining the method (without redeclaring the field) is enough --
+        unlike message_ids/message_follower_ids/activity_ids above, the
+        original implementation has no ``@api.depends`` and was never part
+        of the field-trigger graph, so there is nothing to avoid here.
+        """
+        for record in self:
+            record.message_attachment_count = (
+                record._as_account_move().message_attachment_count
+            )
+
     def _as_account_move(self):
         """Re-browse this recordset as a genuine ``account.move``.
 
@@ -130,3 +206,56 @@ class VendorBill(models.Model):
 
     def button_cancel(self):
         return self._as_account_move().sudo().button_cancel()
+
+    @api.returns("mail.message", lambda value: value.id)
+    def message_post(self, **kwargs):  # pylint: disable=method-required-super
+        """Post the message on the account.move side of this record.
+
+        Mirrors create()/write(): mail.thread's message_post() stamps the
+        new mail.message with ``model = self._name``, so calling it
+        directly on a vendor_bill recordset would (re)create the very
+        split this module exists to remove. Posting through
+        _as_account_move() keeps every message under account.move,
+        consistent with message_ids/message_follower_ids/activity_ids
+        above.
+
+        The ``@api.returns`` decorator is required here, not just cosmetic:
+        mail.thread.message_post() carries the same decorator so that
+        RPC callers (the web client's chatter widget) receive a plain
+        ``mail.message`` id instead of a recordset. Overriding the method
+        without repeating the decorator drops that conversion -- the raw
+        ``mail.message`` recordset then leaks into the JSON-RPC response,
+        which the client cannot serialize and the longpolling bus
+        notification cannot use as a record id, breaking "Log note"/"Send
+        message" from the vendor_bill form with an
+        ``UndefinedFunction: operator does not exist: integer = text``
+        error at the database layer.
+        """
+        return self._as_account_move().sudo().message_post(**kwargs)
+
+    def message_subscribe(
+        self, partner_ids=None, channel_ids=None, subtype_ids=None
+    ):  # pylint: disable=method-required-super
+        return (
+            self._as_account_move()
+            .sudo()
+            .message_subscribe(
+                partner_ids=partner_ids,
+                channel_ids=channel_ids,
+                subtype_ids=subtype_ids,
+            )
+        )
+
+    def message_unsubscribe(
+        self, partner_ids=None, channel_ids=None
+    ):  # pylint: disable=method-required-super
+        return (
+            self._as_account_move()
+            .sudo()
+            .message_unsubscribe(partner_ids=partner_ids, channel_ids=channel_ids)
+        )
+
+    def activity_schedule(
+        self, *args, **kwargs
+    ):  # pylint: disable=method-required-super
+        return self._as_account_move().sudo().activity_schedule(*args, **kwargs)

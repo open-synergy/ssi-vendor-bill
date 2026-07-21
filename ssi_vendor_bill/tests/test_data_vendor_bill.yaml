@@ -515,6 +515,95 @@ scenarios:
             type: "value"
             expected: 50000.0
 
+  # Regression guard for open-synergy/ssi-vendor-bill#16. Before the fix,
+  # create()/write()/action_post() (delegated to account.move) owned some
+  # messages/followers while message_post() called directly on vendor_bill
+  # (as the chatter widget does) owned others -- splitting the thread across
+  # two models. account_move_id/message_ids/message_follower_ids are
+  # asserted identical to account.move in the Python test below (P3); this
+  # scenario checks the actual model ownership recorded on mail.message /
+  # mail.followers.
+  - name: "Chatter for a vendor bill is owned by account.move, not vendor_bill"
+    options: {auto_refresh: true}
+    steps:
+      - step: "Create draft bill with a line"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+          invoice_date: "EVAL: datetime.now().date()"
+          invoice_line_ids:
+            - - 0
+              - 0
+              - name: "Test Line"
+                quantity: 1
+                price_unit: 40000.0
+                account_id: "REC: expense_account.id"
+
+      - step: "Post the bill"
+        action: "call"
+        target: "bill"
+        method: "action_post"
+        as_user: "base.user_admin"
+
+      - step: "No mail.message is owned by the vendor_bill model"
+        action: "search"
+        model: "mail.message"
+        domain:
+          - ["res_id", "=", "REC: bill.id"]
+          - ["model", "=", "vendor_bill"]
+        save_as: "vendor_bill_messages"
+        expect_count: 0
+
+      - step: "No mail.followers is owned by the vendor_bill model"
+        action: "search"
+        model: "mail.followers"
+        domain:
+          - ["res_id", "=", "REC: bill.id"]
+          - ["res_model", "=", "vendor_bill"]
+        save_as: "vendor_bill_followers"
+        expect_count: 0
+
+      - step: "Log a note directly on the vendor_bill recordset"
+        action: "call"
+        target: "bill"
+        method: "message_post"
+        as_user: "base.user_admin"
+        kwargs:
+          body: "Test note posted from vendor_bill chatter"
+
+      - step: "The note is owned by account.move and visible through vendor_bill"
+        action: "search"
+        model: "mail.message"
+        domain:
+          - ["res_id", "=", "REC: bill.id"]
+          - ["model", "=", "account.move"]
+          - ["body", "like", "Test note posted from vendor_bill chatter"]
+        save_as: "account_move_note"
+        expect_count: 1
+
+      - step: "Still nothing owned by vendor_bill after posting a note"
+        action: "search"
+        model: "mail.message"
+        domain:
+          - ["res_id", "=", "REC: bill.id"]
+          - ["model", "=", "vendor_bill"]
+        save_as: "vendor_bill_messages_after_note"
+        expect_count: 0
+
+      - step: "The note is visible through vendor_bill's own message_ids"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          message_ids:
+            type: "o2m"
+            check: "contains"
+            expected_records:
+              - "REC: account_move_note"
+
   - name: "Posting a vendor bill without any invoice line is rejected"
     steps:
       - step: "Create draft bill without any invoice line"

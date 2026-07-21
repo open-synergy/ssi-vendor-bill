@@ -27,59 +27,25 @@
 
 <!-- Primary form view rebound to vendor_bill.
      Core account.view_move_form has no dedicated bill form, it is reused
-     for every move_type, distinguished by attrs on move_type. The generic
-     `action_post` button appears TWICE in that view (positional [1] "Post"
-     for move_type=='entry', [2] "Confirm" for the rest); only [2] is
-     relevant here since this model always has move_type == 'in_invoice'. -->
+     for every move_type, distinguished by attrs on move_type. Because this
+     is a *primary* rebind, it automatically inherits every non-primary
+     view that targets account.view_move_form, including
+     ssi_financial_accounting.account_move_view_form, which already adds
+     the "Policies" page and already rewrites the action_post[2]/
+     button_draft/button_cancel attrs to the confirm_ok/restart_ok/
+     cancel_ok policy fields used here. Re-adding the same page/attrs in
+     this record duplicated them on screen (two "Policies" tabs), see
+     open-synergy/ssi-vendor-bill#17. The arch is intentionally left empty,
+     same pattern as vendor_bill_view_tree/vendor_bill_view_search above:
+     this record only exists so the model has its own form view id
+     (ssi_vendor_bill_operating_unit.vendor_bill_view_form inherits it). -->
 <record id="vendor_bill_view_form" model="ir.ui.view">
     <field name="name">vendor_bill form</field>
     <field name="model">vendor_bill</field>
     <field name="inherit_id" ref="account.view_move_form" />
     <field name="mode">primary</field>
     <field name="arch" type="xml">
-        <xpath expr="//button[@name='action_post'][2]" position="attributes">
-            <attribute name="groups" />
-            <attribute
-                    name="attrs"
-                >{'invisible': [('confirm_ok', '!=', True)]}</attribute>
-        </xpath>
-        <xpath expr="//button[@name='button_draft']" position="attributes">
-            <attribute name="groups" />
-            <attribute
-                    name="attrs"
-                >{'invisible' : [('restart_ok', '!=', True)]}</attribute>
-        </xpath>
-        <xpath expr="//button[@name='button_cancel']" position="attributes">
-            <attribute name="groups" />
-            <attribute
-                    name="attrs"
-                >{'invisible' : [('cancel_ok', '!=', True)]}</attribute>
-        </xpath>
-        <xpath expr="//notebook" position="inside">
-            <page name="policy" string="Policies" groups="base.group_system">
-                <group name="policy_1" colspan="4" col="2">
-                    <field name="policy_template_id" groups="base.group_system" />
-                    <button
-                            name="action_reload_policy_template"
-                            type="object"
-                            string="Reload Template Policy"
-                            class="oe_highlight"
-                            icon="fa-refresh"
-                        />
-                </group>
-                <group name="policy_2" colspan="4" col="2">
-                    <field name="confirm_ok" />
-                    <field name="send_print_ok" />
-                    <field name="register_payment_ok" />
-                    <field name="preview_ok" />
-                    <field name="add_credit_note_ok" />
-                    <field name="post_ok" />
-                    <field name="reverse_entry_ok" />
-                    <field name="cancel_ok" />
-                    <field name="restart_ok" />
-                </group>
-            </page>
-        </xpath>
+        <data />
     </field>
 </record>
 
