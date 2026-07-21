@@ -89,7 +89,7 @@ scenarios:
         action: "search"
         model: "account.move"
         domain:
-          - ["id", "=", "REC: bill.move_id.id"]
+          - ["id", "=", "REC: bill.id"]
         save_as: "move"
         expect_count: 1
 
