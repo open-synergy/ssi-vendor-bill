@@ -49,6 +49,11 @@ msgid "Activity Type Icon"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:res.groups,name:ssi_vendor_bill.vendor_bill_all_group
+msgid "All"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__allowed_policy_template_ids
 msgid "Allowed Policy Templates"
 msgstr ""
@@ -148,12 +153,18 @@ msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__company_id
+#: model:res.groups,name:ssi_vendor_bill.vendor_bill_company_group
 msgid "Company"
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__company_currency_id
 msgid "Company Currency"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:res.groups,name:ssi_vendor_bill.vendor_bill_company_child_group
+msgid "Company and All Child Companies"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -876,12 +887,20 @@ msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__user_id
+#: model:res.groups,name:ssi_vendor_bill.vendor_bill_user_group
 msgid "User"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:res.groups,name:ssi_vendor_bill.vendor_bill_validator_group
+msgid "Validator"
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model,name:ssi_vendor_bill.model_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_vendor_bill_id
+#: model:ir.module.category,name:ssi_vendor_bill.vendor_bill_data_ownership_module_category
+#: model:ir.module.category,name:ssi_vendor_bill.vendor_bill_workflow_module_category
 #: model:ir.ui.menu,name:ssi_vendor_bill.vendor_bill_menu
 msgid "Vendor Bill"
 msgstr ""
@@ -894,6 +913,11 @@ msgstr ""
 #. module: ssi_vendor_bill
 #: model_terms:ir.actions.act_window,help:ssi_vendor_bill.vendor_bill_action
 msgid "Vendor bills register purchase invoices received from suppliers."
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:res.groups,name:ssi_vendor_bill.vendor_bill_viewer_group
+msgid "Viewer"
 msgstr ""
 
 #. module: ssi_vendor_bill
