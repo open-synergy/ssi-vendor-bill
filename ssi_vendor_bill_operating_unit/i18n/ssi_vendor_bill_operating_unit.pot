@@ -15,6 +15,5 @@ msgstr ""
 
 #. module: ssi_vendor_bill_operating_unit
 #: model:res.groups,name:ssi_vendor_bill_operating_unit.vendor_bill_ou_group
-#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_operating_unit.vendor_bill_view_search
 msgid "Operating Unit"
 msgstr ""
