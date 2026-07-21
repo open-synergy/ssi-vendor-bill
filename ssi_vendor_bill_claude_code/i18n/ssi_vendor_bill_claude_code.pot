@@ -146,7 +146,6 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_account_bank_statement_line__claude_code_job_ids
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_account_move__claude_code_job_ids
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_account_payment__claude_code_job_ids
-#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill__claude_code_job_ids
 msgid ""
 "AI extraction job(s) that wrote data onto this vendor bill. Read-only; jobs "
 "are created and processed from the AI Import wizard."
@@ -227,7 +226,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_bank_statement_line__claude_code_job_count
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_move__claude_code_job_count
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_payment__claude_code_job_count
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill__claude_code_job_count
 msgid "Claude Code Import Job Count"
 msgstr ""
 
@@ -235,7 +233,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_bank_statement_line__claude_code_job_ids
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_move__claude_code_job_ids
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_payment__claude_code_job_ids
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill__claude_code_job_ids
 msgid "Claude Code Import Jobs"
 msgstr ""
 
@@ -572,7 +569,6 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_account_bank_statement_line__claude_code_job_count
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_account_move__claude_code_job_count
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_account_payment__claude_code_job_count
-#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill__claude_code_job_count
 msgid "Number of claude-code AI import jobs linked to this vendor bill."
 msgstr ""
 
