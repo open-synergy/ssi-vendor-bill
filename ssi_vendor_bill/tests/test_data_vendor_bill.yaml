@@ -344,6 +344,7 @@ scenarios:
         values:
           name: "Vendor Bill Company B OU"
           code: "EVAL: 'VBCBOU%d' % env['operating.unit'].search_count([])"
+          company_id: "REC: company_b.id"
           partner_id: "REC: ou_partner.id"
 
       - step: "Create vendor bill in company B with an operating unit"
@@ -412,6 +413,10 @@ scenarios:
         values:
           partner_id: "REC: vendor.id"
           journal_id: "REC: journal.id"
+          # Force no operating unit so the co-installed OU module's account.move
+          # default (and its company/OU constraint) never applies to this
+          # ACL-only bill on the main-company journal.
+          operating_unit_id: false
 
       - step: "Reading vendor_bill without ACL group raises AccessError"
         action: "call"
