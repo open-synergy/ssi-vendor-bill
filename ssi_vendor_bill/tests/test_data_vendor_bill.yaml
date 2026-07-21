@@ -211,8 +211,8 @@ scenarios:
             - - 6
               - 0
               - - "REF: base.group_user"
-                - "REF: ssi_financial_accounting.bill_user_group"
-                - "REF: ssi_financial_accounting.bill_company_group"
+                - "REF: ssi_vendor_bill.vendor_bill_user_group"
+                - "REF: ssi_vendor_bill.vendor_bill_company_group"
 
       - step:
           "Create bill as restricted user -> must succeed (sudo materializes
@@ -258,3 +258,170 @@ scenarios:
           state:
             type: "value"
             expected: "posted"
+
+  - name: "Local group grants ACL + own-company visibility (positive)"
+    steps:
+      - step: "Create user with local vendor_bill user + company groups"
+        action: "create"
+        model: "res.users"
+        save_as: "company_user"
+        values:
+          name: "Vendor Bill Company User"
+          login: "vendor_bill_company_user"
+          company_id: "REC: company.id"
+          company_ids:
+            - - 6
+              - 0
+              - - "REC: company.id"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_vendor_bill.vendor_bill_user_group"
+                - "REF: ssi_vendor_bill.vendor_bill_company_group"
+
+      - step: "Create vendor bill as that user in own company -> succeeds"
+        action: "create"
+        model: "vendor_bill"
+        as_user: "company_user"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+
+      - step: "Own-company vendor bill is visible to the user"
+        action: "search"
+        model: "vendor_bill"
+        as_user: "company_user"
+        domain:
+          - ["id", "=", "REC: bill.id"]
+        save_as: "found_own"
+        expect_count: 1
+
+  - name: "Record rule hides other-company vendor bill from company user (negative)"
+    steps:
+      - step: "Create a second company"
+        action: "create"
+        model: "res.company"
+        save_as: "company_b"
+        values:
+          name: "Vendor Bill Company B"
+          currency_id: "REC: company.currency_id.id"
+
+      # account.move.company_id is a stored related field of journal_id.company_id,
+      # so the only reliable way to place a bill in another company is to give it a
+      # journal that belongs to that company.
+      - step: "Create purchase journal in company B"
+        action: "create"
+        model: "account.journal"
+        save_as: "journal_b"
+        values:
+          name:
+            "EVAL: 'Test Vendor Bill Company B Journal %d' %
+            env['account.journal'].search_count([])"
+          code: "EVAL: 'PJB%d' % env['account.journal'].search_count([])"
+          type: "purchase"
+          company_id: "REC: company_b.id"
+
+      # The sibling glue module ssi_vendor_bill_operating_unit (co-installed in this
+      # repo) makes vendor_bill_company_group imply vendor_bill_ou_group, and its
+      # record rule lets any OU-group holder see bills with NO operating unit
+      # (operating_unit_id = False). Record rules from different groups are OR-ed, so
+      # an OU-less bill would leak across companies through that escape. Give this
+      # other-company bill an operating unit the searching user is NOT assigned to,
+      # so BOTH the company rule and the OU rule exclude it -- isolating on company.
+      - step: "Create partner for the other-company operating unit"
+        action: "create"
+        model: "res.partner"
+        save_as: "ou_partner"
+        values:
+          name: "Vendor Bill Company B OU Partner"
+
+      - step: "Create operating unit for company B bill"
+        action: "create"
+        model: "operating.unit"
+        save_as: "ou_b"
+        values:
+          name: "Vendor Bill Company B OU"
+          code: "EVAL: 'VBCBOU%d' % env['operating.unit'].search_count([])"
+          company_id: "REC: company_b.id"
+          partner_id: "REC: ou_partner.id"
+
+      - step: "Create vendor bill in company B with an operating unit"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill_company_b"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal_b.id"
+          operating_unit_id: "REC: ou_b.id"
+
+      - step: "Bill really belongs to company B"
+        action: "assert"
+        target: "bill_company_b"
+        asserts:
+          company_id:
+            type: "m2o"
+            expected: "REC: company_b"
+
+      - step: "Create default-company user with local user + company groups"
+        action: "create"
+        model: "res.users"
+        save_as: "main_company_user"
+        values:
+          name: "Vendor Bill Main Company User"
+          login: "vendor_bill_main_company_user"
+          company_id: "REC: company.id"
+          company_ids:
+            - - 6
+              - 0
+              - - "REC: company.id"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_vendor_bill.vendor_bill_user_group"
+                - "REF: ssi_vendor_bill.vendor_bill_company_group"
+
+      - step: "Default-company user cannot see the company B vendor bill"
+        action: "search"
+        model: "vendor_bill"
+        as_user: "main_company_user"
+        domain:
+          - ["id", "=", "REC: bill_company_b.id"]
+        save_as: "found_other_company"
+        expect_count: 0
+
+  - name: "Internal user without any vendor_bill group is denied read (negative ACL)"
+    steps:
+      - step: "Create plain internal user (no vendor_bill group)"
+        action: "create"
+        model: "res.users"
+        save_as: "no_group_user"
+        values:
+          name: "Plain Internal User"
+          login: "vendor_bill_no_group_user"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+
+      - step: "Create a vendor bill (as default user)"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal.id"
+          # Force no operating unit so the co-installed OU module's account.move
+          # default (and its company/OU constraint) never applies to this
+          # ACL-only bill on the main-company journal.
+          operating_unit_id: false
+
+      - step: "Reading vendor_bill without ACL group raises AccessError"
+        action: "call"
+        target: "bill"
+        method: "read"
+        as_user: "no_group_user"
+        expect_error:
+          type: "AccessError"

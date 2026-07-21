@@ -17,6 +17,8 @@
         "ssi_financial_accounting",
     ],
     "data": [
+        "security/ir_module_category/vendor_bill.xml",
+        "security/res_groups/vendor_bill.xml",
         "security/ir.model.access.csv",
         "security/ir_rule/vendor_bill.xml",
         "views/vendor_bill_views.xml",
