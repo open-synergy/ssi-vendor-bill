@@ -24,6 +24,11 @@ msgid "Access warning"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__account_move_id
+msgid "Account Move"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__message_needaction
 msgid "Action Needed"
 msgstr ""
@@ -590,11 +595,6 @@ msgid "Payments"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill.vendor_bill_view_form
-msgid "Policies"
-msgstr ""
-
-#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__policy_template_id
 msgid "Policy Template"
 msgstr ""
@@ -630,11 +630,6 @@ msgid "Reference"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill.vendor_bill_view_form
-msgid "Reload Template Policy"
-msgstr ""
-
-#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__activity_user_id
 msgid "Responsible User"
 msgstr ""
@@ -652,6 +647,15 @@ msgstr ""
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_user_id
 msgid "Salesperson"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__account_move_id
+msgid ""
+"Same physical row, addressed through the generic account.move model. Used to"
+" make the mail thread (messages, followers, activities) point at "
+"account.move so it has a single owner model instead of being split between "
+"vendor_bill and account.move."
 msgstr ""
 
 #. module: ssi_vendor_bill
