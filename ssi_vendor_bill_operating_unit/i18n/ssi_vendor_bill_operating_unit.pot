@@ -14,6 +14,43 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: ssi_vendor_bill_operating_unit
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill__display_name
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill_line__display_name
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill_tax__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: ssi_vendor_bill_operating_unit
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill__id
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill_line__id
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill_tax__id
+msgid "ID"
+msgstr ""
+
+#. module: ssi_vendor_bill_operating_unit
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill____last_update
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill_line____last_update
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill_tax____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: ssi_vendor_bill_operating_unit
+#: model:ir.model.fields,field_description:ssi_vendor_bill_operating_unit.field_vendor_bill__operating_unit_id
 #: model:res.groups,name:ssi_vendor_bill_operating_unit.vendor_bill_ou_group
 msgid "Operating Unit"
+msgstr ""
+
+#. module: ssi_vendor_bill_operating_unit
+#: model:ir.model,name:ssi_vendor_bill_operating_unit.model_vendor_bill
+msgid "Vendor Bill"
+msgstr ""
+
+#. module: ssi_vendor_bill_operating_unit
+#: model:ir.model,name:ssi_vendor_bill_operating_unit.model_vendor_bill_line
+msgid "Vendor Bill - Line"
+msgstr ""
+
+#. module: ssi_vendor_bill_operating_unit
+#: model:ir.model,name:ssi_vendor_bill_operating_unit.model_vendor_bill_tax
+msgid "Vendor Bill - Tax"
 msgstr ""
