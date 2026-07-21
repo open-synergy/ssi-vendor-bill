@@ -2,12 +2,11 @@
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+from odoo_yaml_test import YamlTransactionCase
 from psycopg2.errors import NotNullViolation
 
 from odoo.tests import tagged
 from odoo.tools import mute_logger
-
-from odoo_yaml_test import YamlTransactionCase
 
 
 @tagged("post_install", "-at_install")
@@ -40,9 +39,7 @@ class TestVendorBill(YamlTransactionCase):
             {
                 "name": "P5 Vendor Bill Payable",
                 "code": "VBP5001",
-                "user_type_id": self.env.ref(
-                    "account.data_account_type_payable"
-                ).id,
+                "user_type_id": self.env.ref("account.data_account_type_payable").id,
                 "reconcile": True,
             }
         )

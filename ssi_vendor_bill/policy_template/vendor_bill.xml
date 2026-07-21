@@ -67,7 +67,10 @@ if env.user.id in document.active_approver_user_ids.ids:
     result = True</field>
 </record>
 
-<record id="policy_template_vendor_bill_restart_approval" model="policy.template_detail">
+<record
+        id="policy_template_vendor_bill_restart_approval"
+        model="policy.template_detail"
+    >
     <field name="template_id" ref="policy_template_vendor_bill" />
     <field
             name="field_id"
@@ -80,12 +83,11 @@ if env.user.id in document.active_approver_user_ids.ids:
         />
     <field name="restrict_user" eval="1" />
     <field name="computation_method">use_group</field>
-    <field
-            name="group_ids"
-            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
-        />
+    <field name="group_ids" eval="[(6,0,[ref('vendor_bill_validator_group')])]" />
     <field name="restrict_additional" eval="1" />
-    <field name="additional_python_code">result = not document.approval_template_id</field>
+    <field
+            name="additional_python_code"
+        >result = not document.approval_template_id</field>
 </record>
 
 <record id="policy_template_vendor_bill_done" model="policy.template_detail">
@@ -118,10 +120,7 @@ if env.user.id in document.active_approver_user_ids.ids:
         />
     <field name="restrict_user" eval="1" />
     <field name="computation_method">use_group</field>
-    <field
-            name="group_ids"
-            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
-        />
+    <field name="group_ids" eval="[(6,0,[ref('vendor_bill_validator_group')])]" />
     <field name="restrict_additional" eval="0" />
 </record>
 
@@ -138,10 +137,7 @@ if env.user.id in document.active_approver_user_ids.ids:
         />
     <field name="restrict_user" eval="1" />
     <field name="computation_method">use_group</field>
-    <field
-            name="group_ids"
-            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
-        />
+    <field name="group_ids" eval="[(6,0,[ref('vendor_bill_validator_group')])]" />
     <field name="restrict_additional" eval="0" />
 </record>
 
@@ -158,10 +154,7 @@ if env.user.id in document.active_approver_user_ids.ids:
         />
     <field name="restrict_user" eval="1" />
     <field name="computation_method">use_group</field>
-    <field
-            name="group_ids"
-            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
-        />
+    <field name="group_ids" eval="[(6,0,[ref('vendor_bill_validator_group')])]" />
     <field name="restrict_additional" eval="0" />
 </record>
 </odoo>

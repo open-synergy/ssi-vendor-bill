@@ -6,7 +6,10 @@
 <record id="vendor_bill_view_search" model="ir.ui.view">
     <field name="name">vendor_bill - search</field>
     <field name="model">vendor_bill</field>
-    <field name="inherit_id" ref="ssi_transaction_mixin.mixin_transaction_view_search" />
+    <field
+            name="inherit_id"
+            ref="ssi_transaction_mixin.mixin_transaction_view_search"
+        />
     <field name="mode">primary</field>
     <field name="arch" type="xml">
         <data>

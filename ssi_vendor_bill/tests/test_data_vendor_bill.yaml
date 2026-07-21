@@ -323,9 +323,7 @@ scenarios:
         save_as: "plain_user"
         values:
           name: "Vendor Bill Plain User"
-          login:
-            "EVAL: 'vendor_bill_plain_user_%d' %
-            env['res.users'].search_count([])"
+          login: "EVAL: 'vendor_bill_plain_user_%d' % env['res.users'].search_count([])"
           groups_id:
             - - 6
               - 0
@@ -394,8 +392,7 @@ scenarios:
         values:
           name: "Vendor Bill Company User"
           login:
-            "EVAL: 'vendor_bill_company_user_%d' %
-            env['res.users'].search_count([])"
+            "EVAL: 'vendor_bill_company_user_%d' % env['res.users'].search_count([])"
           company_id: "REC: company.id"
           company_ids:
             - - 6

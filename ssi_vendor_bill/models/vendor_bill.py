@@ -108,8 +108,7 @@ class VendorBill(models.Model):
         readonly=True,
         states={"draft": [("readonly", False)]},
         ondelete="restrict",
-        help="Currency used to express every monetary amount on this "
-        "document.",
+        help="Currency used to express every monetary amount on this " "document.",
     )
     pricelist_id = fields.Many2one(
         string="Pricelist",
