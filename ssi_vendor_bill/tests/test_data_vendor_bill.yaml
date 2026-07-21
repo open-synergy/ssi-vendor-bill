@@ -308,18 +308,49 @@ scenarios:
           name: "Vendor Bill Company B"
           currency_id: "REC: company.currency_id.id"
 
-      - step: "Create user restricted to company B"
+      # account.move.company_id is a stored related field of journal_id.company_id,
+      # so the only reliable way to place a bill in another company is to give it a
+      # journal that belongs to that company.
+      - step: "Create purchase journal in company B"
+        action: "create"
+        model: "account.journal"
+        save_as: "journal_b"
+        values:
+          name:
+            "EVAL: 'Test Vendor Bill Company B Journal %d' %
+            env['account.journal'].search_count([])"
+          code: "EVAL: 'PJB%d' % env['account.journal'].search_count([])"
+          type: "purchase"
+          company_id: "REC: company_b.id"
+
+      - step: "Create vendor bill in company B (company derived from its journal)"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill_company_b"
+        values:
+          partner_id: "REC: vendor.id"
+          journal_id: "REC: journal_b.id"
+
+      - step: "Bill really belongs to company B"
+        action: "assert"
+        target: "bill_company_b"
+        asserts:
+          company_id:
+            type: "m2o"
+            expected: "REC: company_b"
+
+      - step: "Create default-company user with local user + company groups"
         action: "create"
         model: "res.users"
-        save_as: "user_b"
+        save_as: "main_company_user"
         values:
-          name: "Vendor Bill User Company B"
-          login: "vendor_bill_user_company_b"
-          company_id: "REC: company_b.id"
+          name: "Vendor Bill Main Company User"
+          login: "vendor_bill_main_company_user"
+          company_id: "REC: company.id"
           company_ids:
             - - 6
               - 0
-              - - "REC: company_b.id"
+              - - "REC: company.id"
           groups_id:
             - - 6
               - 0
@@ -327,20 +358,12 @@ scenarios:
                 - "REF: ssi_vendor_bill.vendor_bill_user_group"
                 - "REF: ssi_vendor_bill.vendor_bill_company_group"
 
-      - step: "Create vendor bill in the default company"
-        action: "create"
-        model: "vendor_bill"
-        save_as: "bill_company_a"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
-
-      - step: "Company B user cannot see the default-company vendor bill"
+      - step: "Default-company user cannot see the company B vendor bill"
         action: "search"
         model: "vendor_bill"
-        as_user: "user_b"
+        as_user: "main_company_user"
         domain:
-          - ["id", "=", "REC: bill_company_a.id"]
+          - ["id", "=", "REC: bill_company_b.id"]
         save_as: "found_other_company"
         expect_count: 0
 
