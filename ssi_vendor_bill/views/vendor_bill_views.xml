@@ -104,7 +104,7 @@
         name="Vendor Bill"
         parent="ssi_financial_accounting.menu_account_payable"
         action="vendor_bill_action"
-        groups="ssi_financial_accounting.bill_viewer_group"
+        groups="ssi_vendor_bill.vendor_bill_viewer_group"
         sequence="5"
     />
 </odoo>
