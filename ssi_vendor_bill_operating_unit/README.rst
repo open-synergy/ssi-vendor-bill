@@ -8,10 +8,12 @@ Vendor Bill + Operating Unit
 
 This is a glue module that adds Operating Unit support to the
 ``vendor_bill`` model. Users can pick an operating unit on the vendor bill
-tree, search, and form views. The operating unit set on the bill is shared
-with its underlying ``account.move`` and is automatically propagated to
-every ``account.move.line`` generated when the bill is posted, keeping the
-resulting journal entries scoped to the same operating unit.
+tree and form views, editable while the document is in draft. The
+operating unit set on the bill is propagated to the ``account.move``
+generated when the bill is opened and to every ``account.move.line``
+posted with it, keeping the resulting journal entries scoped to the same
+operating unit. Visibility of vendor bills is restricted per operating
+unit through a record rule.
 
 
 Bug Tracker
