@@ -323,13 +323,37 @@ scenarios:
           type: "purchase"
           company_id: "REC: company_b.id"
 
-      - step: "Create vendor bill in company B (company derived from its journal)"
+      # The sibling glue module ssi_vendor_bill_operating_unit (co-installed in this
+      # repo) makes vendor_bill_company_group imply vendor_bill_ou_group, and its
+      # record rule lets any OU-group holder see bills with NO operating unit
+      # (operating_unit_id = False). Record rules from different groups are OR-ed, so
+      # an OU-less bill would leak across companies through that escape. Give this
+      # other-company bill an operating unit the searching user is NOT assigned to,
+      # so BOTH the company rule and the OU rule exclude it -- isolating on company.
+      - step: "Create partner for the other-company operating unit"
+        action: "create"
+        model: "res.partner"
+        save_as: "ou_partner"
+        values:
+          name: "Vendor Bill Company B OU Partner"
+
+      - step: "Create operating unit for company B bill"
+        action: "create"
+        model: "operating.unit"
+        save_as: "ou_b"
+        values:
+          name: "Vendor Bill Company B OU"
+          code: "EVAL: 'VBCBOU%d' % env['operating.unit'].search_count([])"
+          partner_id: "REC: ou_partner.id"
+
+      - step: "Create vendor bill in company B with an operating unit"
         action: "create"
         model: "vendor_bill"
         save_as: "bill_company_b"
         values:
           partner_id: "REC: vendor.id"
           journal_id: "REC: journal_b.id"
+          operating_unit_id: "REC: ou_b.id"
 
       - step: "Bill really belongs to company B"
         action: "assert"
