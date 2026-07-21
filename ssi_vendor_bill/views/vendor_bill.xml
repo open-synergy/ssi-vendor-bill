@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+<record id="vendor_bill_view_search" model="ir.ui.view">
+    <field name="name">vendor_bill - search</field>
+    <field name="model">vendor_bill</field>
+    <field name="inherit_id" ref="ssi_transaction_mixin.mixin_transaction_view_search" />
+    <field name="mode">primary</field>
+    <field name="arch" type="xml">
+        <data>
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="partner_id" />
+                <field name="type_id" />
+            </xpath>
+        </data>
+    </field>
+</record>
+
+<record id="vendor_bill_view_tree" model="ir.ui.view">
+    <field name="name">vendor_bill - tree</field>
+    <field name="model">vendor_bill</field>
+    <field name="inherit_id" ref="ssi_transaction_mixin.mixin_transaction_view_tree" />
+    <field name="mode">primary</field>
+    <field name="arch" type="xml">
+        <data>
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="partner_id" />
+                <field name="type_id" optional="hide" />
+                <field name="date" />
+                <field name="date_due" />
+            </xpath>
+        </data>
+    </field>
+</record>
+
+<record id="vendor_bill_view_form" model="ir.ui.view">
+    <field name="name">vendor_bill - form</field>
+    <field name="model">vendor_bill</field>
+    <field name="inherit_id" ref="ssi_transaction_mixin.mixin_transaction_view_form" />
+    <field name="mode">primary</field>
+    <field name="arch" type="xml">
+        <data>
+            <xpath expr="//group[@name='header_right']" position="inside">
+                <field name="type_id" />
+                <field name="partner_id" />
+                <field name="partner_document_number" />
+                <field name="date" />
+                <field name="duration_id" />
+                <field name="date_due" />
+            </xpath>
+            <xpath expr="//group[@name='header_center']" position="inside">
+                <field name="currency_id" />
+                <field name="pricelist_id" />
+                <field name="journal_id" />
+                <field name="payable_account_id" />
+                <field name="analytic_account_id" />
+            </xpath>
+        </data>
+    </field>
+</record>
+
+<record id="vendor_bill_action" model="ir.actions.act_window">
+    <field name="name">Vendor Bills</field>
+    <field name="res_model">vendor_bill</field>
+    <field name="view_mode">tree,form</field>
+    <field name="view_id" ref="vendor_bill_view_tree" />
+    <field name="search_view_id" ref="vendor_bill_view_search" />
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+            Create a vendor bill
+        </p><p>
+            Vendor bills register purchase invoices received from suppliers.
+        </p>
+    </field>
+</record>
+
+<menuitem
+        id="vendor_bill_menu"
+        name="Vendor Bill"
+        parent="ssi_financial_accounting.menu_account_payable"
+        action="vendor_bill_action"
+        groups="vendor_bill_viewer_group"
+        sequence="5"
+    />
+</odoo>

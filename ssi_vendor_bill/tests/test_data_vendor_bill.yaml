@@ -1,28 +1,27 @@
+options:
+  auto_refresh: true
+
 setup:
   steps:
-    - step: "Get expense account type"
+    - step: "Get payable account type"
       action: "ref"
-      xml_id: "account.data_account_type_expenses"
-      save_as: "expense_acc_type"
+      xml_id: "account.data_account_type_payable"
+      save_as: "payable_acc_type"
 
     # `setup:` replays before every scenario in the same transaction (no
     # rollback in between), so a fixed `code` would collide with the
     # previous scenario's record on the 2nd+ replay (code is unique per
-    # company). Generate a fresh, never-colliding code on each replay
-    # from the current record count (EVAL cannot call private/underscore
-    # attributes, so a helper like _search_new_account_code is off-limits).
-    - step: "Create expense account"
+    # company). Generate a fresh, never-colliding code/name on each replay.
+    - step: "Create payable account"
       action: "create"
       model: "account.account"
-      save_as: "expense_account"
+      save_as: "account"
       values:
-        code: "EVAL: 'VBX%d' % env['account.account'].search_count([])"
-        name: "Vendor Bill Test Expense"
-        user_type_id: "REC: expense_acc_type.id"
+        code: "EVAL: 'VB%d' % env['account.account'].search_count([])"
+        name: "Test Vendor Bill Payable"
+        user_type_id: "REC: payable_acc_type.id"
+        reconcile: true
 
-    # `name` must vary too: the journal's mail alias is derived from
-    # `name`, and alias names are globally unique, so a fixed `name`
-    # would also collide on the 2nd+ replay of this setup block.
     - step: "Create purchase journal"
       action: "create"
       model: "account.journal"
@@ -31,19 +30,18 @@ setup:
         name:
           "EVAL: 'Test Vendor Bill Purchase Journal %d' %
           env['account.journal'].search_count([])"
-        code: "EVAL: 'PJ%d' % env['account.journal'].search_count([])"
+        code: "EVAL: 'VBJ%d' % env['account.journal'].search_count([])"
         type: "purchase"
 
-    - step: "Create sale journal"
+    - step: "Create vendor bill type"
       action: "create"
-      model: "account.journal"
-      save_as: "sale_journal"
+      model: "vendor_bill_type"
+      save_as: "type"
       values:
-        name:
-          "EVAL: 'Test Vendor Bill Sale Journal %d' %
-          env['account.journal'].search_count([])"
-        code: "EVAL: 'SJ%d' % env['account.journal'].search_count([])"
-        type: "sale"
+        name: "Test Vendor Bill Type"
+        code: "/"
+        journal_id: "REC: journal.id"
+        payable_account_id: "REC: account.id"
 
     - step: "Create vendor partner"
       action: "create"
@@ -54,220 +52,350 @@ setup:
         is_company: true
 
 scenarios:
-  - name: "Create Vendor Bill forces in_invoice move_type default"
+  - name: "Create vendor bill in draft state"
     steps:
-      - step: "Create bill without move_type"
+      - step: "Create vendor bill"
         action: "create"
         model: "vendor_bill"
         save_as: "bill"
         values:
+          type_id: "REC: type.id"
           partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
           journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
 
-      - step: "Assert defaults applied"
+      - step: "Assert created in draft with no document number yet"
         action: "assert"
         target: "bill"
         asserts:
-          move_type:
+          id:
             type: "value"
-            expected: "in_invoice"
+            operator: "is_truthy"
           state:
             type: "value"
             expected: "draft"
+          name:
+            type: "value"
+            expected: "/"
 
-  - name: "Global rule hides other move types from Vendor Bill"
+  - name: "Onchange type_id fills journal and payable account"
     steps:
-      - step: "Create customer invoice via account.move"
-        action: "create"
-        model: "account.move"
-        save_as: "customer_invoice"
-        values:
-          move_type: "out_invoice"
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: sale_journal.id"
-
-      - step: "Create vendor refund via account.move"
-        action: "create"
-        model: "account.move"
-        save_as: "vendor_refund"
-        values:
-          move_type: "in_refund"
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
-
-      - step: "Create vendor bill via vendor_bill"
-        action: "create"
+      - step: "Set type_id on a new form"
+        action: "form"
         model: "vendor_bill"
-        save_as: "bill"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
+        save: false
+        ops:
+          - set: {type_id: "REC: type"}
+          - assert:
+              journal_id:
+                type: "m2o"
+                expected: "REC: journal"
+              payable_account_id:
+                type: "m2o"
+                expected: "REC: account"
 
-      - step: "Other move types are not visible through vendor_bill"
-        action: "search"
-        model: "vendor_bill"
-        as_user: "base.user_admin"
-        domain:
-          - ["id", "in", ["REC: customer_invoice.id", "REC: vendor_refund.id"]]
-        save_as: "found_others"
-        expect_count: 0
-
-      - step: "Vendor bill is visible through vendor_bill"
-        action: "search"
-        model: "vendor_bill"
-        as_user: "base.user_admin"
-        domain:
-          - ["id", "=", "REC: bill.id"]
-        save_as: "found_bill"
-        expect_count: 1
-
-  - name: "Inherited workflow methods post and reset to draft"
-    options: {auto_refresh: true}
+  - name: "Onchange duration and date fills date due"
     steps:
-      - step: "Create bill with a line"
+      - step: "Create a 7 calendar day duration"
         action: "create"
-        model: "vendor_bill"
-        save_as: "bill"
+        model: "base.duration"
+        save_as: "duration"
         values:
-          partner_id: "REC: vendor.id"
+          name: "Test Vendor Bill Duration 7 Days"
+          code: "/"
+          relative_delta_days: 7
+          number_of_days: 0
+
+      - step: "Set date then duration_id on a new form"
+        action: "form"
+        model: "vendor_bill"
+        save: false
+        ops:
+          - set: {date: 2024-01-01}
+          - set: {duration_id: "REC: duration"}
+          - assert:
+              date_due:
+                type: "value"
+                expected: 2024-01-08
+
+  - name: "Compute allowed currency ids from type's manual currency list"
+    steps:
+      - step: "Create a second vendor bill type with a manual currency allow-list"
+        action: "create"
+        model: "vendor_bill_type"
+        save_as: "manual_currency_type"
+        values:
+          name: "Test Vendor Bill Type Manual Currency"
+          code: "/"
           journal_id: "REC: journal.id"
-          invoice_date: "EVAL: datetime.now().date()"
-          invoice_line_ids:
-            - - 0
+          payable_account_id: "REC: account.id"
+          currency_selection_method: "manual"
+          currency_ids:
+            - - 6
               - 0
-              - name: "Test Line"
-                quantity: 1
-                price_unit: 100000.0
-                account_id: "REC: expense_account.id"
+              - - "REF: base.EUR"
+                - "REF: base.SGD"
 
-      - step: "Assert draft"
-        action: "assert"
-        target: "bill"
-        asserts:
-          state:
-            type: "value"
-            expected: "draft"
-
-      - step: "Post bill"
-        action: "call"
-        target: "bill"
-        method: "action_post"
-        as_user: "base.user_admin"
-
-      - step: "Assert posted"
-        action: "assert"
-        target: "bill"
-        refresh: true
-        asserts:
-          state:
-            type: "value"
-            expected: "posted"
-
-      - step: "Reset bill to draft"
-        action: "call"
-        target: "bill"
-        method: "button_draft"
-        as_user: "base.user_admin"
-
-      - step: "Assert back to draft"
-        action: "assert"
-        target: "bill"
-        refresh: true
-        asserts:
-          state:
-            type: "value"
-            expected: "draft"
-
-  - name: "Create overrides forced move_type back to vendor bill"
-    steps:
-      - step: "Create bill trying to force out_invoice"
+      - step: "Create vendor bill using that type"
         action: "create"
         model: "vendor_bill"
         save_as: "bill"
         values:
-          move_type: "out_invoice"
+          type_id: "REC: manual_currency_type.id"
           partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
           journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
 
-      - step: "Assert create() forced in_invoice"
+      - step: "Assert allowed_currency_ids is exactly the manual list"
         action: "assert"
         target: "bill"
         asserts:
-          move_type:
-            type: "value"
-            expected: "in_invoice"
+          allowed_currency_ids:
+            type: "m2m"
+            check: "exact"
+            expected_records:
+              - "RECORDSET: base.EUR"
+              - "RECORDSET: base.SGD"
 
-  - name: "Restricted user (no account.move ACL) can create and post bill via sudo"
-    options: {auto_refresh: true}
+  - name: "Confirm then approve moves bill from draft to open with a document number"
     steps:
-      - step: "Create restricted vendor-bill user (no account.move ACL)"
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Assert a document number was assigned on open"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          name:
+            type: "value"
+            operator: "not_equals"
+            expected: "/"
+
+  - name: "Done moves bill from open to done"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+
+      - step: "Approve the bill"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Finish the bill"
+        action: "call"
+        target: "bill"
+        method: "action_done"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "done"
+
+  - name: "Restart moves bill from reject back to draft"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+
+      - step: "Reject the bill"
+        action: "call"
+        target: "bill"
+        method: "action_reject_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "reject"
+
+      - step: "Restart the bill as validator"
+        action: "call"
+        target: "bill"
+        method: "action_restart"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+  - name: "Confirm is rejected for a user without the User group"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a plain internal user without vendor_bill_user_group"
         action: "create"
         model: "res.users"
-        save_as: "bill_user"
+        save_as: "plain_user"
         values:
-          name: "Vendor Bill Only User"
-          login: "vendor_bill_only_user"
+          name: "Vendor Bill Plain User"
+          login:
+            "EVAL: 'vendor_bill_plain_user_%d' %
+            env['res.users'].search_count([])"
           groups_id:
             - - 6
               - 0
               - - "REF: base.group_user"
-                - "REF: ssi_vendor_bill.vendor_bill_user_group"
-                - "REF: ssi_vendor_bill.vendor_bill_company_group"
 
-      - step:
-          "Create bill as restricted user -> must succeed (sudo materializes
-          account.move lines)"
-        action: "create"
-        model: "vendor_bill"
-        as_user: "bill_user"
-        save_as: "bill"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
-          invoice_date: "EVAL: datetime.now().date()"
-          invoice_line_ids:
-            - - 0
-              - 0
-              - name: "Test Line"
-                quantity: 1
-                price_unit: 50000.0
-                account_id: "REC: expense_account.id"
-
-      - step: "Assert draft + audit trail kept (sudo() keeps real user as create_uid)"
-        action: "assert"
-        target: "bill"
-        asserts:
-          state:
-            type: "value"
-            expected: "draft"
-          create_uid:
-            type: "m2o"
-            expected: "REC: bill_user"
-
-      - step: "Post bill as restricted user -> must succeed (posts account.move)"
+      - step: "Confirm as plain user must be rejected"
         action: "call"
         target: "bill"
-        method: "action_post"
-        as_user: "bill_user"
+        method: "action_confirm"
+        as_user: "plain_user"
+        expect_error:
+          type: "UserError"
 
-      - step: "Assert posted"
-        action: "assert"
-        target: "bill"
-        refresh: true
-        asserts:
-          state:
-            type: "value"
-            expected: "posted"
-
-  - name: "Local group grants ACL + own-company visibility (positive)"
+  - name: "Done is rejected while bill is still draft"
     steps:
-      - step: "Create user with local vendor_bill user + company groups"
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Done while still draft must be rejected"
+        action: "call"
+        target: "bill"
+        method: "action_done"
+        as_user: "base.user_admin"
+        expect_error:
+          type: "UserError"
+
+  - name: "Company-scoped user cannot see a bill owned by another company"
+    steps:
+      - step: "Create another company"
+        action: "create"
+        model: "res.company"
+        save_as: "other_company"
+        values:
+          name: "Test Vendor Bill Other Company"
+
+      - step: "Create vendor bill owned by the other company"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          company_id: "REC: other_company.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a user scoped to the main company via vendor_bill_company_group"
         action: "create"
         model: "res.users"
         save_as: "company_user"
         values:
           name: "Vendor Bill Company User"
-          login: "vendor_bill_company_user"
+          login:
+            "EVAL: 'vendor_bill_company_user_%d' %
+            env['res.users'].search_count([])"
           company_id: "REC: company.id"
           company_ids:
             - - 6
@@ -277,349 +405,50 @@ scenarios:
             - - 6
               - 0
               - - "REF: base.group_user"
-                - "REF: ssi_vendor_bill.vendor_bill_user_group"
-                - "REF: ssi_vendor_bill.vendor_bill_company_group"
+                - "ssi_vendor_bill.vendor_bill_company_group"
 
-      - step: "Create vendor bill as that user in own company -> succeeds"
-        action: "create"
-        model: "vendor_bill"
-        as_user: "company_user"
-        save_as: "bill"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
-
-      - step: "Own-company vendor bill is visible to the user"
+      - step: "Bill owned by other company is not visible"
         action: "search"
         model: "vendor_bill"
         as_user: "company_user"
         domain:
           - ["id", "=", "REC: bill.id"]
-        save_as: "found_own"
-        expect_count: 1
-
-  - name: "Record rule hides other-company vendor bill from company user (negative)"
-    steps:
-      - step: "Create a second company"
-        action: "create"
-        model: "res.company"
-        save_as: "company_b"
-        values:
-          name: "Vendor Bill Company B"
-          currency_id: "REC: company.currency_id.id"
-
-      # account.move.company_id is a stored related field of journal_id.company_id,
-      # so the only reliable way to place a bill in another company is to give it a
-      # journal that belongs to that company.
-      - step: "Create purchase journal in company B"
-        action: "create"
-        model: "account.journal"
-        save_as: "journal_b"
-        values:
-          name:
-            "EVAL: 'Test Vendor Bill Company B Journal %d' %
-            env['account.journal'].search_count([])"
-          code: "EVAL: 'PJB%d' % env['account.journal'].search_count([])"
-          type: "purchase"
-          company_id: "REC: company_b.id"
-
-      # The sibling glue module ssi_vendor_bill_operating_unit (co-installed in this
-      # repo) makes vendor_bill_company_group imply vendor_bill_ou_group, and its
-      # record rule lets any OU-group holder see bills with NO operating unit
-      # (operating_unit_id = False). Record rules from different groups are OR-ed, so
-      # an OU-less bill would leak across companies through that escape. Give this
-      # other-company bill an operating unit the searching user is NOT assigned to,
-      # so BOTH the company rule and the OU rule exclude it -- isolating on company.
-      - step: "Create partner for the other-company operating unit"
-        action: "create"
-        model: "res.partner"
-        save_as: "ou_partner"
-        values:
-          name: "Vendor Bill Company B OU Partner"
-
-      - step: "Create operating unit for company B bill"
-        action: "create"
-        model: "operating.unit"
-        save_as: "ou_b"
-        values:
-          name: "Vendor Bill Company B OU"
-          code: "EVAL: 'VBCBOU%d' % env['operating.unit'].search_count([])"
-          company_id: "REC: company_b.id"
-          partner_id: "REC: ou_partner.id"
-
-      - step: "Create vendor bill in company B with an operating unit"
-        action: "create"
-        model: "vendor_bill"
-        save_as: "bill_company_b"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal_b.id"
-          operating_unit_id: "REC: ou_b.id"
-
-      - step: "Bill really belongs to company B"
-        action: "assert"
-        target: "bill_company_b"
-        asserts:
-          company_id:
-            type: "m2o"
-            expected: "REC: company_b"
-
-      - step: "Create default-company user with local user + company groups"
-        action: "create"
-        model: "res.users"
-        save_as: "main_company_user"
-        values:
-          name: "Vendor Bill Main Company User"
-          login: "vendor_bill_main_company_user"
-          company_id: "REC: company.id"
-          company_ids:
-            - - 6
-              - 0
-              - - "REC: company.id"
-          groups_id:
-            - - 6
-              - 0
-              - - "REF: base.group_user"
-                - "REF: ssi_vendor_bill.vendor_bill_user_group"
-                - "REF: ssi_vendor_bill.vendor_bill_company_group"
-
-      - step: "Default-company user cannot see the company B vendor bill"
-        action: "search"
-        model: "vendor_bill"
-        as_user: "main_company_user"
-        domain:
-          - ["id", "=", "REC: bill_company_b.id"]
-        save_as: "found_other_company"
+        save_as: "found"
         expect_count: 0
 
-  - name: "Internal user without any vendor_bill group is denied read (negative ACL)"
+  - name: "Cancelling through the reason wizard moves bill to cancel state"
     steps:
-      - step: "Create plain internal user (no vendor_bill group)"
-        action: "create"
-        model: "res.users"
-        save_as: "no_group_user"
-        values:
-          name: "Plain Internal User"
-          login: "vendor_bill_no_group_user"
-          groups_id:
-            - - 6
-              - 0
-              - - "REF: base.group_user"
-
-      - step: "Create a vendor bill (as default user)"
+      - step: "Create vendor bill"
         action: "create"
         model: "vendor_bill"
         save_as: "bill"
         values:
+          type_id: "REC: type.id"
           partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
           journal_id: "REC: journal.id"
-          # Force no operating unit so the co-installed OU module's account.move
-          # default (and its company/OU constraint) never applies to this
-          # ACL-only bill on the main-company journal.
-          operating_unit_id: false
+          payable_account_id: "REC: account.id"
 
-      - step: "Reading vendor_bill without ACL group raises AccessError"
-        action: "call"
+      - step: "Create a cancel reason"
+        action: "create"
+        model: "base.cancel_reason"
+        save_as: "reason"
+        values:
+          name: "Test Vendor Bill Cancel Reason"
+          code: "/"
+
+      - step: "Cancel through the reason wizard as validator"
+        action: "wizard"
+        model: "base.select_cancel_reason"
         target: "bill"
-        method: "read"
-        as_user: "no_group_user"
-        expect_error:
-          type: "AccessError"
-
-  # Regression guard for the onchange() override. invoice_line_ids is a
-  # One2many whose inverse (account.move.line.move_id) points at
-  # account.move, not at vendor_bill. Before onchange() delegated to
-  # account.move, the server answered a freshly added line with a bare
-  # [(5,)] -- the line was dropped and the web client crashed in
-  # FieldOne2Many.reset. These scenarios assert the line survives.
-  - name: "Adding an invoice line on a new bill form keeps the line"
-    steps:
-      - step: "Fill a new vendor bill form and add one invoice line"
-        action: "form"
-        model: "vendor_bill"
-        save_as: "bill"
-        ops:
-          - set: {partner_id: "REC: vendor"}
-          - set: {journal_id: "REC: journal"}
-          - set: {invoice_date: "EVAL: datetime.now().date()"}
-          - new:
-              field: "invoice_line_ids"
-              values:
-                name: "Form Test Line"
-                account_id: "REC: expense_account"
-                quantity: 3
-                price_unit: 25000.0
-          - assert:
-              invoice_line_ids:
-                type: "o2m"
-                check: "count"
-                expected_count: 1
-
-      - step: "Saved bill keeps the line and totals it"
-        action: "assert"
-        target: "bill"
+        as_user: "base.user_admin"
+        values:
+          cancel_reason_id: "REC: reason"
+        method: "action_confirm"
         asserts:
-          invoice_line_ids:
-            type: "o2m"
-            check: "count"
-            expected_count: 1
-          amount_untaxed:
+          state:
             type: "value"
-            expected: 75000.0
-
-  - name: "Adding a second invoice line on an existing bill keeps both lines"
-    steps:
-      - step: "Create draft bill with one line"
-        action: "create"
-        model: "vendor_bill"
-        save_as: "bill"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
-          invoice_date: "EVAL: datetime.now().date()"
-          invoice_line_ids:
-            - - 0
-              - 0
-              - name: "First Line"
-                quantity: 1
-                price_unit: 10000.0
-                account_id: "REC: expense_account.id"
-
-      - step: "Add a second line through the form"
-        action: "form"
-        target: "bill"
-        ops:
-          - new:
-              field: "invoice_line_ids"
-              values:
-                name: "Second Line"
-                account_id: "REC: expense_account"
-                quantity: 2
-                price_unit: 20000.0
-          - assert:
-              invoice_line_ids:
-                type: "o2m"
-                check: "count"
-                expected_count: 2
-
-      - step: "Saved bill holds both lines"
-        action: "assert"
-        target: "bill"
-        refresh: true
-        asserts:
-          invoice_line_ids:
-            type: "o2m"
-            check: "count"
-            expected_count: 2
-          amount_untaxed:
-            type: "value"
-            expected: 50000.0
-
-  # Regression guard for open-synergy/ssi-vendor-bill#16. Before the fix,
-  # create()/write()/action_post() (delegated to account.move) owned some
-  # messages/followers while message_post() called directly on vendor_bill
-  # (as the chatter widget does) owned others -- splitting the thread across
-  # two models. account_move_id/message_ids/message_follower_ids are
-  # asserted identical to account.move in the Python test below (P3); this
-  # scenario checks the actual model ownership recorded on mail.message /
-  # mail.followers.
-  - name: "Chatter for a vendor bill is owned by account.move, not vendor_bill"
-    options: {auto_refresh: true}
-    steps:
-      - step: "Create draft bill with a line"
-        action: "create"
-        model: "vendor_bill"
-        save_as: "bill"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
-          invoice_date: "EVAL: datetime.now().date()"
-          invoice_line_ids:
-            - - 0
-              - 0
-              - name: "Test Line"
-                quantity: 1
-                price_unit: 40000.0
-                account_id: "REC: expense_account.id"
-
-      - step: "Post the bill"
-        action: "call"
-        target: "bill"
-        method: "action_post"
-        as_user: "base.user_admin"
-
-      - step: "No mail.message is owned by the vendor_bill model"
-        action: "search"
-        model: "mail.message"
-        domain:
-          - ["res_id", "=", "REC: bill.id"]
-          - ["model", "=", "vendor_bill"]
-        save_as: "vendor_bill_messages"
-        expect_count: 0
-
-      - step: "No mail.followers is owned by the vendor_bill model"
-        action: "search"
-        model: "mail.followers"
-        domain:
-          - ["res_id", "=", "REC: bill.id"]
-          - ["res_model", "=", "vendor_bill"]
-        save_as: "vendor_bill_followers"
-        expect_count: 0
-
-      - step: "Log a note directly on the vendor_bill recordset"
-        action: "call"
-        target: "bill"
-        method: "message_post"
-        as_user: "base.user_admin"
-        kwargs:
-          body: "Test note posted from vendor_bill chatter"
-
-      - step: "The note is owned by account.move and visible through vendor_bill"
-        action: "search"
-        model: "mail.message"
-        domain:
-          - ["res_id", "=", "REC: bill.id"]
-          - ["model", "=", "account.move"]
-          - ["body", "like", "Test note posted from vendor_bill chatter"]
-        save_as: "account_move_note"
-        expect_count: 1
-
-      - step: "Still nothing owned by vendor_bill after posting a note"
-        action: "search"
-        model: "mail.message"
-        domain:
-          - ["res_id", "=", "REC: bill.id"]
-          - ["model", "=", "vendor_bill"]
-        save_as: "vendor_bill_messages_after_note"
-        expect_count: 0
-
-      - step: "The note is visible through vendor_bill's own message_ids"
-        action: "assert"
-        target: "bill"
-        refresh: true
-        asserts:
-          message_ids:
-            type: "o2m"
-            check: "contains"
-            expected_records:
-              - "REC: account_move_note"
-
-  - name: "Posting a vendor bill without any invoice line is rejected"
-    steps:
-      - step: "Create draft bill without any invoice line"
-        action: "create"
-        model: "vendor_bill"
-        save_as: "empty_bill"
-        values:
-          partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
-          invoice_date: "EVAL: datetime.now().date()"
-
-      - step: "Posting without a line raises UserError"
-        action: "call"
-        target: "empty_bill"
-        method: "action_post"
-        as_user: "base.user_admin"
-        expect_error:
-          type: "UserError"
-          message_contains: "add a line before posting"
+            expected: "cancel"

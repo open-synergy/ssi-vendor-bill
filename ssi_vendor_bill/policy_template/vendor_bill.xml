@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo noupdate="1">
+<record id="policy_template_vendor_bill" model="policy.template">
+    <field name="name">Standard</field>
+    <field name="model_id" ref="model_vendor_bill" />
+    <field
+            name="state_field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','state')]"
+        />
+    <field name="sequence" eval="100" />
+    <field name="python_code">result=True</field>
+</record>
+
+<record id="policy_template_vendor_bill_confirm" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','confirm_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','=','draft')]"
+        />
+    <field name="restrict_user" eval="1" />
+    <field name="computation_method">use_group</field>
+    <field name="group_ids" eval="[(6,0,[ref('vendor_bill_user_group')])]" />
+    <field name="restrict_additional" eval="0" />
+</record>
+
+<record id="policy_template_vendor_bill_approve" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','approve_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','=','confirm')]"
+        />
+    <field name="restrict_user" eval="0" />
+    <field name="restrict_additional" eval="1" />
+    <field name="additional_python_code">result = False
+if env.user.id in document.active_approver_user_ids.ids:
+    result = True</field>
+</record>
+
+<record id="policy_template_vendor_bill_reject" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','reject_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','=','confirm')]"
+        />
+    <field name="restrict_user" eval="0" />
+    <field name="restrict_additional" eval="1" />
+    <field name="additional_python_code">result = False
+if env.user.id in document.active_approver_user_ids.ids:
+    result = True</field>
+</record>
+
+<record id="policy_template_vendor_bill_restart_approval" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','restart_approval_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','=','open')]"
+        />
+    <field name="restrict_user" eval="1" />
+    <field name="computation_method">use_group</field>
+    <field
+            name="group_ids"
+            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
+        />
+    <field name="restrict_additional" eval="1" />
+    <field name="additional_python_code">result = not document.approval_template_id</field>
+</record>
+
+<record id="policy_template_vendor_bill_done" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','done_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','=','open')]"
+        />
+    <field name="restrict_user" eval="1" />
+    <field name="computation_method">use_group</field>
+    <field name="group_ids" eval="[(6,0,[ref('vendor_bill_user_group')])]" />
+    <field name="restrict_additional" eval="0" />
+</record>
+
+<record id="policy_template_vendor_bill_cancel" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','cancel_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','in',['draft','confirm','open'])]"
+        />
+    <field name="restrict_user" eval="1" />
+    <field name="computation_method">use_group</field>
+    <field
+            name="group_ids"
+            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
+        />
+    <field name="restrict_additional" eval="0" />
+</record>
+
+<record id="policy_template_vendor_bill_restart" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','restart_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','in',['cancel','reject'])]"
+        />
+    <field name="restrict_user" eval="1" />
+    <field name="computation_method">use_group</field>
+    <field
+            name="group_ids"
+            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
+        />
+    <field name="restrict_additional" eval="0" />
+</record>
+
+<record id="policy_template_vendor_bill_manual_number" model="policy.template_detail">
+    <field name="template_id" ref="policy_template_vendor_bill" />
+    <field
+            name="field_id"
+            search="[('model_id.model','=','vendor_bill'),('name','=','manual_number_ok')]"
+        />
+    <field name="restrict_state" eval="1" />
+    <field
+            name="state_ids"
+            search="[('field_id.model_id.model','=','vendor_bill'),('value','=','draft')]"
+        />
+    <field name="restrict_user" eval="1" />
+    <field name="computation_method">use_group</field>
+    <field
+            name="group_ids"
+            eval="[(6,0,[ref('vendor_bill_validator_group')])]"
+        />
+    <field name="restrict_additional" eval="0" />
+</record>
+</odoo>
