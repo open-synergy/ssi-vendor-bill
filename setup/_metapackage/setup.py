@@ -10,6 +10,7 @@ setuptools.setup(
     install_requires=[
         'odoo14-addon-ssi_vendor_bill',
         'odoo14-addon-ssi_vendor_bill_claude_code',
+        'odoo14-addon-ssi_vendor_bill_operating_unit',
     ],
     classifiers=[
         'Programming Language :: Python',
