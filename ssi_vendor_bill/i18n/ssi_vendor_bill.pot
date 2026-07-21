@@ -14,23 +14,20 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__last_payment_line_id
-msgid "#Last Payment Line"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__access_warning
-msgid "Access warning"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__account_move_id
-msgid "Account Move"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__name
+msgid "# Document"
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model_terms:ir.ui.view,arch_db:ssi_vendor_bill.vendor_bill_type_view_form
 msgid "Accounting"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__journal_id
+msgid ""
+"Accounting journal in which the resulting accounting entry of this document "
+"will be posted."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -42,6 +39,21 @@ msgstr ""
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__active
 msgid "Active"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__active_approval_ids
+msgid "Active Approvals"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__active_approver_partner_ids
+msgid "Active Partners"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__active_approver_user_ids
+msgid "Active Users"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -74,18 +86,63 @@ msgid "All"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__allowed_contact_ids
+msgid "Allowed Contact"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__allowed_currency_ids
+msgid "Allowed Currencies"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__allowed_policy_template_ids
 msgid "Allowed Policy Templates"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_residual
-msgid "Amount Due"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__allowed_pricelist_ids
+msgid "Allowed Pricelists"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_residual_signed
-msgid "Amount Due Signed"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__analytic_account_id
+msgid "Analytic Account"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__analytic_account_id
+msgid ""
+"Analytic account used to track the cost of this document for analytic "
+"reporting purposes."
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__approval_template_id
+msgid "Approval Configuration"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__approval_template_id
+msgid "Approval Template"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__approval_ids
+msgid "Approvals"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__approve_ok
+msgid ""
+"Approve policy\n"
+"\n"
+"* If active user can see and execute 'Approve' button"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__approved
+msgid "Approved"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -95,31 +152,8 @@ msgid "Attachment Count"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__authorized_transaction_ids
-msgid "Authorized Transactions"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__invoice_vendor_bill_id
-msgid "Auto-complete from a past bill."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__partner_bank_id
-msgid ""
-"Bank Account Number to which the invoice will be paid. A Company bank "
-"account if this is a Customer Invoice or Vendor Credit Note, otherwise a "
-"Partner bank account number."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__bank_partner_id
-msgid "Bank Partner"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__add_credit_note_ok
-msgid "Can Add Credit Note"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__approve_ok
+msgid "Can Approve"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -133,48 +167,56 @@ msgid "Can Confirm"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__post_ok
-msgid "Can Post"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__done_ok
+msgid "Can Finished"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__preview_ok
-msgid "Can Preview"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__manual_number_ok
+msgid "Can Input Manual Document Number"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__register_payment_ok
-msgid "Can Register Payment"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__reject_ok
+msgid "Can Reject"
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__restart_ok
-msgid "Can Reset To Draft"
+msgid "Can Restart"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__reverse_entry_ok
-msgid "Can Reverse Entry"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__restart_approval_ok
+msgid "Can Restart Approval"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__send_print_ok
-msgid "Can Send & Print"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__open_ok
+msgid "Can Start"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_cash_rounding_id
-msgid "Cash Rounding Method"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__cancel_reason_id
+msgid "Cancel Reason"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__cancel_ok
+msgid ""
+"Cancel policy\n"
+"\n"
+"* If active user can see and execute 'Cancel' button"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill__state__cancel
+msgid "Cancelled"
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__code
 msgid "Code"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__commercial_partner_id
-msgid "Commercial Entity"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -189,13 +231,35 @@ msgid "Company Currency"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__company_partner_id
+msgid "Company Partner"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:res.groups,name:ssi_vendor_bill.vendor_bill_company_child_group
 msgid "Company and All Child Companies"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__country_code
-msgid "Country Code"
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__company_id
+msgid ""
+"Company that own the document\n"
+"\n"
+"* Automatically filled with user's company.\n"
+"  Default company can be changed"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__confirm_ok
+msgid ""
+"Confirm policy\n"
+"\n"
+"* If active user can see and execute 'Confirm' button"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__contact_partner_id
+msgid "Contact"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -218,6 +282,13 @@ msgstr ""
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__currency_ids
 msgid "Currencies"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__allowed_currency_ids
+msgid ""
+"Currencies that may be selected on this document, determined by the currency"
+" selection method configured on the selected Type."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -246,13 +317,18 @@ msgid "Currency Selection Method"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__access_url
-msgid "Customer Portal URL"
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__currency_id
+msgid "Currency used to express every monetary amount on this document."
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__date
 msgid "Date"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__date_due
+msgid "Date Due"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -266,21 +342,9 @@ msgid "Default payable account used when posting a vendor bill of this type."
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__invoice_cash_rounding_id
-msgid ""
-"Defines the smallest coinage of the currency that can be used to pay by "
-"cash."
-msgstr ""
-
-#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__display_name
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__display_name
 msgid "Display Name"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__display_qr_code
-msgid "Display QR-code"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -312,51 +376,21 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_date_due
-msgid "Due Date"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__edi_document_ids
-msgid "Edi Document"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__edi_error_count
-msgid "Edi Error Count"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__edi_show_cancel_button
-msgid "Edi Show Cancel Button"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__edi_web_services_to_process
-msgid "Edi Web Services To Process"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__amount_by_group
-msgid "Edit Tax amounts if you encounter rounding issues."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__edi_state
-msgid "Electronic invoicing"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__fiscal_position_id
-msgid "Fiscal Position"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__fiscal_position_id
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__done_ok
 msgid ""
-"Fiscal positions are used to adapt taxes and accounts for particular "
-"customers or sales orders/invoices. The default value comes from the "
-"customer."
+"Done policy\n"
+"\n"
+"* If active user can see and execute 'Done' button"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill__state__draft
+msgid "Draft"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__duration_id
+msgid "Duration"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -381,33 +415,6 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__activity_type_icon
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill_type__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__move_name
-msgid "Force Number"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__move_name
-msgid ""
-"Force invoice number. Use this field if\n"
-"        you don't want to use the default numbering."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__has_reconciled_entries
-msgid "Has Reconciled Entries"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__highest_name
-msgid "Highest Name"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__edi_error_count
-msgid "How many EDIs are in error for this move ?"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -443,103 +450,9 @@ msgid "If checked, some messages have a delivery error."
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__to_check
-msgid ""
-"If this checkbox is ticked, it means that the user was not sure of all the "
-"related information at the time of the creation of the move and that the "
-"move needs to be checked again."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__auto_post
-msgid ""
-"If this checkbox is ticked, this entry will be automatically posted at its "
-"date."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__restrict_mode_hash_table
-msgid ""
-"If ticked, the accounting entry or invoice receives a hash as soon as it is "
-"posted and cannot be modified anymore."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__inalterable_hash
-msgid "Inalterability Hash"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__secure_sequence_number
-msgid "Inalteralbility No Gap Sequence #"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_incoterm_id
-msgid "Incoterm"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__invoice_incoterm_id
-msgid ""
-"International Commercial Terms are a series of predefined commercial terms "
-"used in international transactions."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_filter_type_domain
-msgid "Invoice Filter Type Domain"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_has_matching_suspense_amount
-msgid "Invoice Has Matching Suspense Amount"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_has_outstanding
-msgid "Invoice Has Outstanding"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_outstanding_credits_debits_widget
-msgid "Invoice Outstanding Credits Debits Widget"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_partner_display_name
-msgid "Invoice Partner Display Name"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_payments_widget
-msgid "Invoice Payments Widget"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_line_ids
-msgid "Invoice lines"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_date
-msgid "Invoice/Bill Date"
-msgstr ""
-
-#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__message_is_follower
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__message_is_follower
 msgid "Is Follower"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__is_move_sent
-msgid "Is Move Sent"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__is_move_sent
-msgid "It indicates that the invoice/payment has been sent."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -549,19 +462,9 @@ msgid "Journal"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__line_ids
-msgid "Journal Items"
-msgstr ""
-
-#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill____last_update
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type____last_update
 msgid "Last Modified on"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__last_payment_date
-msgid "Last Payment Date"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -577,11 +480,6 @@ msgid "Last Updated on"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__restrict_mode_hash_table
-msgid "Lock Posted Entries with Hash"
-msgstr ""
-
-#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__message_main_attachment_id
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__message_main_attachment_id
 msgid "Main Attachment"
@@ -592,6 +490,14 @@ msgstr ""
 #: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill_type__pricelist_selection_method__manual
 #: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill_type__product_selection_method__manual
 msgid "Manual"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__manual_number_ok
+msgid ""
+"Manual number assignment policy\n"
+"\n"
+"* If active user can edit document number"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -682,6 +588,11 @@ msgid "Name"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__need_validation
+msgid "Need Validation"
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__activity_date_deadline
 msgid "Next Activity Deadline"
@@ -700,13 +611,14 @@ msgid "Next Activity Type"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__note
-msgid "Note"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__next_approval_ids
+msgid "Next Approvals"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__name
-msgid "Number"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__note
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__note
+msgid "Note"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -740,18 +652,8 @@ msgid "Number of unread messages"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__operating_unit_id
-msgid "Operating Unit"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_origin
-msgid "Origin"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__tax_cash_basis_move_id
-msgid "Origin Tax Cash Basis Entry"
+#: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill__state__done
+msgid "Paid"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -760,38 +662,16 @@ msgid "Partner"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__payable_account_id
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__payable_account_id
 msgid "Payable Account"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__payment_id
-msgid "Payment"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__qr_code_method
-msgid "Payment QR-code"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__payment_reference
-msgid "Payment Reference"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__payment_state
-msgid "Payment Status"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_payment_term_id
-msgid "Payment Terms"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__move_line_payment_ids
-msgid "Payments"
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__payable_account_id
+msgid ""
+"Payable account credited for the total amount owed to the vendor when this "
+"document is posted."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -800,23 +680,8 @@ msgid "Policy Template"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__access_url
-msgid "Portal Access URL"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__auto_post
-msgid "Post Automatically"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__posted_before
-msgid "Posted Before"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__preferred_payment_method_id
-msgid "Preferred Payment Method"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__pricelist_id
+msgid "Pricelist"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -840,8 +705,22 @@ msgid "Pricelist Selection Method"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__pricelist_id
+msgid ""
+"Pricelist used to determine the vendor price of the products purchased on "
+"this document."
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_type__pricelist_ids
 msgid "Pricelists"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__allowed_pricelist_ids
+msgid ""
+"Pricelists that may be selected on this document, determined by the "
+"pricelist selection method configured on the selected Type."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -898,13 +777,29 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__partner_bank_id
-msgid "Recipient Bank"
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__partner_document_number
+msgid ""
+"Reference number of the original document issued by the vendor (e.g. their "
+"own invoice number), used to cross-check against the vendor's own records."
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__ref
-msgid "Reference"
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__reject_ok
+msgid ""
+"Reject policy\n"
+"\n"
+"* If active user can see and execute 'Reject' button"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__rejected
+#: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill__state__reject
+msgid "Rejected"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__user_id
+msgid "Responsible"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -914,67 +809,37 @@ msgid "Responsible User"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__reversal_move_id
-msgid "Reversal Move"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__reversed_entry_id
-msgid "Reversal of"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_user_id
-msgid "Salesperson"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__account_move_id
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__restart_approval_ok
 msgid ""
-"Same physical row, addressed through the generic account.move model. Used to"
-" make the mail thread (messages, followers, activities) point at "
-"account.move so it has a single owner model instead of being split between "
-"vendor_bill and account.move."
+"Restart approval policy\n"
+"\n"
+"* If active user can see and execute 'Restart Approval' button"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__access_token
-msgid "Security Token"
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__restart_ok
+msgid ""
+"Restart policy\n"
+"\n"
+"* If active user can see and execute 'Restart' button"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__sequence_number
-msgid "Sequence Number"
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__reviewer_id
+msgid "Reviewer"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__sequence_prefix
-msgid "Sequence Prefix"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__show_name_warning
-msgid "Show Name Warning"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__show_reset_to_draft_button
-msgid "Show Reset To Draft Button"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_source_email
-msgid "Source Email"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__statement_line_id
-msgid "Statement Line"
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__open_ok
+msgid ""
+"Start policy\n"
+"\n"
+"* If active user can see and execute 'Start' button"
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__state
-msgid "Status"
+msgid "State"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -988,166 +853,32 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__string_to_hash
-msgid "String To Hash"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__suitable_journal_ids
-msgid "Suitable Journal"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_tax
-msgid "Tax"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__tax_cash_basis_rec_id
-msgid "Tax Cash Basis Entry of"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__tax_lock_date_message
-msgid "Tax Lock Date Message"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_tax_signed
-msgid "Tax Signed"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_by_group
-msgid "Tax amount by group"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__posted_before
-msgid "Technical field for knowing if the move has been posted before"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__edi_web_services_to_process
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__name
 msgid ""
-"Technical field to display the documents that will be processed by the CRON"
+"Transaction/document number\n"
+"\n"
+"* Unique indentifer of transaction\n"
+"* Leave '/' to automatically generate number\n"
+"* Change '/' into any number/identifier to manually assign number.\n"
+"  Manual number assignment can be done in 'Draft' state\n"
+"  Only user with 'Can Manualy Assign Number' policy can manually assign number.\n"
+"* Transaction with number other than '/' can not be deleted."
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__bank_partner_id
-msgid "Technical field to get the domain on the bank"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__tax_lock_date_message
-msgid ""
-"Technical field used to display a message when the invoice's accounting date"
-" is prior of the tax lock date."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__invoice_has_matching_suspense_amount
-msgid ""
-"Technical field used to display an alert on invoices if there is at least a "
-"matching amount in any supsense account."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__user_id
-msgid "Technical field used to fit the generic behavior in mail templates."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__invoice_filter_type_domain
-msgid ""
-"Technical field used to have a dynamic domain on journal / taxes in the form"
-" view."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__tax_cash_basis_rec_id
-msgid ""
-"Technical field used to keep track of the tax cash basis reconciliation. "
-"This is needed when cancelling the source: it will post the inverse journal "
-"entry to cancel that part too."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__narration
-msgid "Terms and Conditions"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__country_code
-msgid ""
-"The ISO country code in two chars. \n"
-"You can use this field for quick search."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__edi_state
-msgid "The aggregated state of all the EDIs of this move"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__invoice_origin
-msgid "The document(s) that generated the invoice."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__tax_cash_basis_move_id
-msgid ""
-"The journal entry from which this tax cash basis journal entry has been "
-"created."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__payment_reference
-msgid "The payment reference to set on journal items."
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__to_check
-msgid "To Check"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_total
-msgid "Total"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_total_signed
-msgid "Total Signed"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__transaction_ids
-msgid "Transactions"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__move_type
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__type_id
 msgid "Type"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__type_name
-msgid "Type Name"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__qr_code_method
-msgid ""
-"Type of QR-code to be generated for the payment of this invoice, when "
-"printing it. If left blank, the first available and usable method will be "
-"used."
 msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__activity_exception_decoration
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill_type__activity_exception_decoration
 msgid "Type of the exception activity on record."
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill__state__open
+msgid "Unpaid"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -1163,19 +894,31 @@ msgid "Unread Messages Counter"
 msgstr ""
 
 #. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_untaxed
-msgid "Untaxed Amount"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__amount_untaxed_signed
-msgid "Untaxed Amount Signed"
-msgstr ""
-
-#. module: ssi_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__user_id
 #: model:res.groups,name:ssi_vendor_bill.vendor_bill_user_group
 msgid "User"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__user_id
+msgid ""
+"User that responsible for document\n"
+"\n"
+"* Create user can be different with responsible user\n"
+"* Automatically filled with user that initiate document creation.\n"
+"  Default responsible can be changed."
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__reviewer_id
+msgid ""
+"User that responsible to review document\n"
+"\n"
+"* Unless it configured to approve reviewer does not equal to approver"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__active_approver_user_ids
+msgid "Users that can approve/reject document"
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -1185,7 +928,6 @@ msgstr ""
 
 #. module: ssi_vendor_bill
 #: model:ir.model,name:ssi_vendor_bill.model_vendor_bill
-#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__invoice_vendor_bill_id
 #: model:ir.module.category,name:ssi_vendor_bill.vendor_bill_data_ownership_module_category
 #: model:ir.module.category,name:ssi_vendor_bill.vendor_bill_workflow_module_category
 #: model:ir.ui.menu,name:ssi_vendor_bill.vendor_bill_menu
@@ -1210,6 +952,18 @@ msgid "Vendor Bills"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__partner_document_number
+msgid "Vendor Document Number"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__type_id
+msgid ""
+"Vendor bill type that determines the default journal, payable account, and "
+"the allowed currencies/pricelists for this document."
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model_terms:ir.actions.act_window,help:ssi_vendor_bill.vendor_bill_action
 msgid "Vendor bills register purchase invoices received from suppliers."
 msgstr ""
@@ -1217,6 +971,11 @@ msgstr ""
 #. module: ssi_vendor_bill
 #: model:res.groups,name:ssi_vendor_bill.vendor_bill_viewer_group
 msgid "Viewer"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields.selection,name:ssi_vendor_bill.selection__vendor_bill__state__confirm
+msgid "Waiting for Approval"
 msgstr ""
 
 #. module: ssi_vendor_bill
