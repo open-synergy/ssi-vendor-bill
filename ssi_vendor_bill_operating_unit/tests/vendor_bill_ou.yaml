@@ -1,197 +1,332 @@
+options:
+  auto_refresh: true
+
+setup:
+  steps:
+    - step: "Get payable account type"
+      action: "ref"
+      xml_id: "account.data_account_type_payable"
+      save_as: "payable_acc_type"
+
+    - step: "Get expense account type"
+      action: "ref"
+      xml_id: "account.data_account_type_expenses"
+      save_as: "expense_acc_type"
+
+    # `setup:` replays before every scenario in the same transaction (no
+    # rollback in between), so a fixed `code` would collide with the
+    # previous scenario's record on the 2nd+ replay (code is unique per
+    # company). Generate a fresh, never-colliding code/name on each replay.
+    - step: "Create payable account"
+      action: "create"
+      model: "account.account"
+      save_as: "payable_account"
+      values:
+        code: "EVAL: 'VBOU%d' % env['account.account'].search_count([])"
+        name: "Test Vendor Bill OU Payable"
+        user_type_id: "REC: payable_acc_type.id"
+        reconcile: true
+
+    - step: "Create line expense account"
+      action: "create"
+      model: "account.account"
+      save_as: "line_account"
+      values:
+        code: "EVAL: 'VBOUE%d' % env['account.account'].search_count([])"
+        name: "Test Vendor Bill OU Expense"
+        user_type_id: "REC: expense_acc_type.id"
+
+    - step: "Create purchase journal"
+      action: "create"
+      model: "account.journal"
+      save_as: "journal"
+      values:
+        name:
+          "EVAL: 'Test Vendor Bill OU Purchase Journal %d' %
+          env['account.journal'].search_count([])"
+        code: "EVAL: 'VBOJ%d' % env['account.journal'].search_count([])"
+        type: "purchase"
+
+    - step: "Create vendor bill type"
+      action: "create"
+      model: "vendor_bill_type"
+      save_as: "type"
+      values:
+        name: "Test Vendor Bill OU Type"
+        code: "/"
+        journal_id: "REC: journal.id"
+        payable_account_id: "REC: payable_account.id"
+
+    - step: "Create vendor partner"
+      action: "create"
+      model: "res.partner"
+      save_as: "vendor"
+      values:
+        name: "Test Vendor Bill OU Vendor Partner"
+        is_company: true
+
 scenarios:
-  - name: "Posted vendor bill propagates operating unit to move and all move lines"
+  - name: "Vendor bill defaults to the creating user's operating unit"
     steps:
-      - step: "Get expense account type"
-        action: "ref"
-        xml_id: "account.data_account_type_expenses"
-        save_as: "expense_acc_type"
-
-      - step: "Create expense account"
-        action: "create"
-        model: "account.account"
-        save_as: "expense_account"
-        values:
-          code: "EVAL: 'VBOUX%d' % env['account.account'].search_count([])"
-          name: "Vendor Bill OU Test Expense"
-          user_type_id: "REC: expense_acc_type.id"
-
-      - step: "Create vendor partner"
-        action: "create"
-        model: "res.partner"
-        save_as: "vendor"
-        values:
-          name: "Test Vendor Bill OU Partner 1"
-          is_company: true
-
-      - step: "Create partner for operating unit A"
+      - step: "Create partner for the operating unit"
         action: "create"
         model: "res.partner"
         save_as: "ou_partner"
         values:
-          name: "Test Vendor Bill OU-A Partner 1"
+          name: "Test Vendor Bill OU-Default Partner"
+
+      - step: "Create operating unit"
+        action: "create"
+        model: "operating.unit"
+        save_as: "ou"
+        values:
+          name: "Test Vendor Bill OU-Default"
+          code: "VBOUDEF"
+          partner_id: "REC: ou_partner.id"
+
+      - step: "Create a user whose default operating unit is this one"
+        action: "create"
+        model: "res.users"
+        save_as: "ou_user"
+        values:
+          name: "Vendor Bill OU Default User"
+          login: "vendor_bill_ou_default_user"
+          default_operating_unit_id: "REC: ou.id"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_vendor_bill.vendor_bill_user_group"
+
+      - step: "Create vendor bill as that user, without setting operating_unit_id"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        as_user: "ou_user"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Bill defaults to the creating user's operating unit"
+        action: "assert"
+        target: "bill"
+        asserts:
+          operating_unit_id:
+            type: "m2o"
+            expected: "REC: ou"
+
+  - name: "Posted vendor bill propagates its operating unit to the account.move header"
+    steps:
+      - step: "Create partner for the operating unit"
+        action: "create"
+        model: "res.partner"
+        save_as: "ou_partner"
+        values:
+          name: "Test Vendor Bill OU-A Partner"
 
       - step: "Create operating unit A"
         action: "create"
         model: "operating.unit"
         save_as: "ou"
         values:
-          name: "Test Vendor Bill OU-A 1"
-          code: "VBOUA1"
+          name: "Test Vendor Bill OU-A"
+          code: "VBOUA"
           partner_id: "REC: ou_partner.id"
-
-      - step: "Create purchase journal scoped to operating unit A"
-        action: "create"
-        model: "account.journal"
-        save_as: "journal"
-        values:
-          name:
-            "EVAL: 'Test Vendor Bill OU Purchase Journal %d' %
-            env['account.journal'].search_count([])"
-          code: "EVAL: 'VBOJ%d' % env['account.journal'].search_count([])"
-          type: "purchase"
-          operating_unit_ids:
-            - - 6
-              - 0
-              - - "REC: ou.id"
 
       - step: "Create vendor bill with operating unit A"
         action: "create"
         model: "vendor_bill"
         save_as: "bill"
         values:
+          type_id: "REC: type.id"
           partner_id: "REC: vendor.id"
-          journal_id: "REC: journal.id"
           operating_unit_id: "REC: ou.id"
-          invoice_date: "EVAL: datetime.now().date()"
-          invoice_line_ids:
-            - - 0
-              - 0
-              - name: "Test Line"
-                quantity: 1
-                price_unit: 300000.0
-                account_id: "REC: expense_account.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
 
-      - step: "Bill carries the operating unit at creation"
-        action: "assert"
-        target: "bill"
-        asserts:
-          operating_unit_id:
-            type: "m2o"
-            expected: "REC: ou"
+      - step: "Create a detail line so the bill has something to post"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 300000.0
 
-      - step: "Post the bill"
+      - step: "Confirm the bill"
         action: "call"
         target: "bill"
-        method: "action_post"
+        method: "action_confirm"
         as_user: "base.user_admin"
-
-      - step: "Fetch the generated account move"
-        action: "search"
-        model: "account.move"
-        domain:
-          - ["id", "=", "REC: bill.id"]
-        save_as: "move"
-        expect_count: 1
-
-      - step: "Move keeps the same operating unit as the bill"
-        action: "assert"
-        target: "move"
         asserts:
-          operating_unit_id:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill, opening it and posting the journal entry"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "The generated move carries the same operating unit as the bill"
+        action: "assert"
+        target: "bill"
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_truthy"
+          move_id.operating_unit_id:
             type: "m2o"
             expected: "REC: ou"
 
-      - step: "Every move line carries operating unit A"
-        action: "search"
-        model: "account.move.line"
-        domain:
-          - ["move_id", "=", "REC: move.id"]
-          - ["operating_unit_id", "=", "REC: ou.id"]
-        save_as: "ou_lines"
-        expect_count: 2
-
-      - step: "No move line carries a different operating unit"
-        action: "search"
-        model: "account.move.line"
-        domain:
-          - ["move_id", "=", "REC: move.id"]
-          - ["operating_unit_id", "!=", "REC: ou.id"]
-        save_as: "wrong_lines"
-        expect_count: 0
-
-  - name: "Operating Unit record rule scopes vendor bill visibility"
+  - name:
+      "Vendor bill without an operating unit still posts, leaving the move without one"
     steps:
-      - step: "Create vendor partner"
-        action: "create"
-        model: "res.partner"
-        save_as: "vendor"
-        values:
-          name: "Test Vendor Bill OU Partner 2"
-          is_company: true
-
-      - step: "Create partner for operating unit A"
-        action: "create"
-        model: "res.partner"
-        save_as: "ou_partner"
-        values:
-          name: "Test Vendor Bill OU-A Partner 2"
-
-      - step: "Create operating unit A"
-        action: "create"
-        model: "operating.unit"
-        save_as: "ou"
-        values:
-          name: "Test Vendor Bill OU-A 2"
-          code: "VBOUA2"
-          partner_id: "REC: ou_partner.id"
-
-      - step: "Create purchase journal scoped to operating unit A"
-        action: "create"
-        model: "account.journal"
-        save_as: "journal"
-        values:
-          name:
-            "EVAL: 'Test Vendor Bill OU Purchase Journal %d' %
-            env['account.journal'].search_count([])"
-          code: "EVAL: 'VBOJ%d' % env['account.journal'].search_count([])"
-          type: "purchase"
-          operating_unit_ids:
-            - - 6
-              - 0
-              - - "REC: ou.id"
-
-      - step: "Create bill with operating unit A"
+      - step: "Create vendor bill with no operating unit"
         action: "create"
         model: "vendor_bill"
         save_as: "bill"
         values:
+          type_id: "REC: type.id"
           partner_id: "REC: vendor.id"
+          operating_unit_id: false
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
           journal_id: "REC: journal.id"
-          operating_unit_id: "REC: ou.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Create a detail line so the bill has something to post"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 200000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill, opening it and posting the journal entry"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "The journal entry is created but has no operating unit either"
+        action: "assert"
+        target: "bill"
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_truthy"
+          move_id.operating_unit_id:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Operating unit record rule scopes vendor bill visibility"
+    steps:
+      - step: "Create partner for operating unit A"
+        action: "create"
+        model: "res.partner"
+        save_as: "ou_partner_a"
+        values:
+          name: "Test Vendor Bill OU-A Rule Partner"
+
+      - step: "Create operating unit A"
+        action: "create"
+        model: "operating.unit"
+        save_as: "ou_a"
+        values:
+          name: "Test Vendor Bill OU-A Rule"
+          code: "VBOUAR"
+          partner_id: "REC: ou_partner_a.id"
 
       - step: "Create partner for operating unit B"
         action: "create"
         model: "res.partner"
         save_as: "ou_partner_b"
         values:
-          name: "Test Vendor Bill OU-B Partner 2"
+          name: "Test Vendor Bill OU-B Rule Partner"
 
       - step: "Create operating unit B"
         action: "create"
         model: "operating.unit"
         save_as: "ou_b"
         values:
-          name: "Test Vendor Bill OU-B 2"
-          code: "VBOUB2"
+          name: "Test Vendor Bill OU-B Rule"
+          code: "VBOUBR"
           partner_id: "REC: ou_partner_b.id"
 
-      - step: "Create user allowed on operating unit A"
+      - step: "Create bill scoped to operating unit A"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill_a"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          operating_unit_id: "REC: ou_a.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Create bill with no operating unit"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill_no_ou"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          operating_unit_id: false
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Create user allowed on operating unit A only"
         action: "create"
         model: "res.users"
         save_as: "user_a"
         values:
-          name: "Vendor Bill OU-A User"
-          login: "vendor_bill_ou_a_user"
+          name: "Vendor Bill OU-A Rule User"
+          login: "vendor_bill_ou_a_rule_user"
           groups_id:
             - - 6
               - 0
@@ -201,15 +336,15 @@ scenarios:
           assigned_operating_unit_ids:
             - - 6
               - 0
-              - - "REC: ou.id"
+              - - "REC: ou_a.id"
 
       - step: "Create user allowed on operating unit B only"
         action: "create"
         model: "res.users"
         save_as: "user_b"
         values:
-          name: "Vendor Bill OU-B User"
-          login: "vendor_bill_ou_b_user"
+          name: "Vendor Bill OU-B Rule User"
+          login: "vendor_bill_ou_b_rule_user"
           groups_id:
             - - 6
               - 0
@@ -221,27 +356,36 @@ scenarios:
               - 0
               - - "REC: ou_b.id"
 
-      - step: "User of operating unit A can see the bill"
+      - step: "User of operating unit A can see the bill scoped to A"
         action: "search"
         model: "vendor_bill"
         as_user: "user_a"
         domain:
-          - ["id", "=", "REC: bill.id"]
+          - ["id", "=", "REC: bill_a.id"]
         save_as: "seen_by_a"
         expect_count: 1
 
-      - step: "User of operating unit B cannot see the bill"
+      - step: "User of operating unit A can see the bill with no operating unit"
+        action: "search"
+        model: "vendor_bill"
+        as_user: "user_a"
+        domain:
+          - ["id", "=", "REC: bill_no_ou.id"]
+        save_as: "no_ou_seen_by_a"
+        expect_count: 1
+
+      - step: "User of operating unit B cannot see the bill scoped to A"
         action: "search"
         model: "vendor_bill"
         as_user: "user_b"
         domain:
-          - ["id", "=", "REC: bill.id"]
+          - ["id", "=", "REC: bill_a.id"]
         save_as: "seen_by_b"
         expect_count: 0
 
-  - name: "Local company group implies the operating unit group (implied)"
+  - name: "Local company group implies the operating unit group"
     steps:
-      - step: "Create user with local vendor_bill company group only"
+      - step: "Create user with only the local vendor_bill company group"
         action: "create"
         model: "res.users"
         save_as: "company_user"
@@ -263,3 +407,92 @@ scenarios:
             check: "contains_xml_ids"
             expected_xml_ids:
               - "ssi_vendor_bill_operating_unit.vendor_bill_ou_group"
+
+  - name: "Editing operating_unit_id through the form while open is rejected"
+    steps:
+      - step: "Create partner for operating unit A"
+        action: "create"
+        model: "res.partner"
+        save_as: "ou_partner_a"
+        values:
+          name: "Test Vendor Bill OU-A Readonly Partner"
+
+      - step: "Create operating unit A"
+        action: "create"
+        model: "operating.unit"
+        save_as: "ou_a"
+        values:
+          name: "Test Vendor Bill OU-A Readonly"
+          code: "VBOUARO"
+          partner_id: "REC: ou_partner_a.id"
+
+      - step: "Create partner for operating unit B"
+        action: "create"
+        model: "res.partner"
+        save_as: "ou_partner_b"
+        values:
+          name: "Test Vendor Bill OU-B Readonly Partner"
+
+      - step: "Create operating unit B"
+        action: "create"
+        model: "operating.unit"
+        save_as: "ou_b"
+        values:
+          name: "Test Vendor Bill OU-B Readonly"
+          code: "VBOUBRO"
+          partner_id: "REC: ou_partner_b.id"
+
+      - step: "Create vendor bill with operating unit A"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          operating_unit_id: "REC: ou_a.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: payable_account.id"
+
+      - step: "Create a detail line so the bill stays open after approval"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 150000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill, moving it to open"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Editing operating_unit_id through the form while open is rejected"
+        action: "form"
+        target: "bill"
+        save: false
+        expect_error:
+          type: "AssertionError"
+        values:
+          operating_unit_id: "REC: ou_b"

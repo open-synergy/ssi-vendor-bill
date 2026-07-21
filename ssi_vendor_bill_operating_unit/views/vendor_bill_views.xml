@@ -20,13 +20,26 @@
     </field>
 </record>
 
-<!-- vendor_bill_view_search and vendor_bill_view_form used to add
-     operating_unit_id / the grp_ou filter here too, but both are already
-     inherited from ssi_financial_accounting_operating_unit through the
-     primary rebind chain (vendor_bill_view_search/vendor_bill_view_form
-     are primary views of account.view_account_invoice_filter /
-     account.view_move_form, so they automatically pick up every
-     non-primary inherit already applied to those base views). Adding them
-     again here duplicated the field/filter on screen, see
-     open-synergy/ssi-vendor-bill#13. -->
+<record id="vendor_bill_view_form" model="ir.ui.view">
+    <field name="name">vendor_bill form - operating unit</field>
+    <field name="model">vendor_bill</field>
+    <field name="inherit_id" ref="ssi_vendor_bill.vendor_bill_view_form" />
+    <field name="arch" type="xml">
+        <data>
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field
+                        name="operating_unit_id"
+                        groups="operating_unit.group_multi_operating_unit"
+                    />
+            </xpath>
+        </data>
+    </field>
+</record>
+
+<!-- vendor_bill is now a standalone transactional model (no longer
+     _inherits account.move), so operating_unit_id is no longer inserted
+     into the form for free by ssi_financial_accounting_operating_unit.
+     It must be added explicitly above, see open-synergy/ssi-vendor-bill#25.
+     Search view is intentionally left untouched: it is out of scope for
+     this glue module (see #25 "Tidak termasuk"). -->
 </odoo>
