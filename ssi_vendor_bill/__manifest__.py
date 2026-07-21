@@ -4,7 +4,7 @@
 
 {
     "name": "Vendor Bill",
-    "version": "14.0.1.2.0",
+    "version": "14.0.2.0.0",
     "website": "https://simetri-sinergi.id",
     "author": "OpenSynergy Indonesia, PT. Simetri Sinergi Indonesia",
     "contributors": [
@@ -16,17 +16,28 @@
     "depends": [
         "ssi_financial_accounting",
         "ssi_master_data_mixin",
+        "ssi_transaction_confirm_mixin",
+        "ssi_transaction_open_mixin",
+        "ssi_transaction_done_mixin",
+        "ssi_transaction_cancel_mixin",
+        "ssi_transaction_date_due_mixin",
+        "ssi_transaction_partner_mixin",
+        "ssi_company_currency_mixin",
+        "ssi_m2o_configurator_mixin",
     ],
     "data": [
         "security/ir_module_category/vendor_bill.xml",
         "security/res_groups/vendor_bill.xml",
         "security/res_groups/vendor_bill_type.xml",
-        "security/ir.model.access.csv",
+        "security/ir_model_access/vendor_bill.xml",
         "security/ir_model_access/vendor_bill_type.xml",
         "security/ir_rule/vendor_bill.xml",
-        "views/vendor_bill_views.xml",
+        "ir_sequence/vendor_bill.xml",
+        "sequence_template/vendor_bill.xml",
+        "approval_template/vendor_bill.xml",
+        "policy_template/vendor_bill.xml",
+        "views/vendor_bill.xml",
         "views/vendor_bill_type_views.xml",
     ],
     "demo": [],
-    "uninstall_hook": "uninstall_hook",
 }

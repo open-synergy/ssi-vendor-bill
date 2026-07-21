@@ -3,21 +3,17 @@
      Copyright 2026 PT. Simetri Sinergi Indonesia
      License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
-<!-- Global rule: this model is, by definition, a vendor bill only.
-     Being global (no group), it is ANDed with every other rule and applies to
-     all users (admin included) so that other move types (customer invoices,
-     refunds, journal entries, ...) stored in the shared account_move table
-     are never returned here. -->
-<record id="vendor_bill_global_rule" model="ir.rule">
-    <field name="name">Vendor Bill - Only In Invoice Move Type</field>
+<!-- Internal user rule: a regular internal user only sees vendor bills
+     they are themselves responsible for. -->
+<record id="vendor_bill_internal_user_rule" model="ir.rule">
+    <field name="name">Vendor Bill - Internal Users</field>
     <field name="model_id" ref="model_vendor_bill" />
-    <!-- No `groups`: an ir.rule without groups is a global rule (ANDed with
-         every group rule and applied to all non-superuser users). -->
-    <field name="domain_force">[('move_type', '=', 'in_invoice')]</field>
-    <field name="perm_read" eval="1" />
-    <field name="perm_write" eval="1" />
-    <field name="perm_create" eval="1" />
+    <field name="groups" eval="[(4, ref('base.group_user'))]" />
+    <field name="domain_force">[('user_id', '=', user.id)]</field>
     <field name="perm_unlink" eval="1" />
+    <field name="perm_write" eval="1" />
+    <field name="perm_read" eval="1" />
+    <field name="perm_create" eval="1" />
 </record>
 
 <!-- Data ownership rules (local vendor_bill data-ownership groups) -->

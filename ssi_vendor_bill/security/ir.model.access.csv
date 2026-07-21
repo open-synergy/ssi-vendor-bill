@@ -1,4 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_vendor_bill_viewer,vendor_bill - viewer,model_vendor_bill,ssi_vendor_bill.vendor_bill_viewer_group,1,0,0,0
-access_vendor_bill_user,vendor_bill - user,model_vendor_bill,ssi_vendor_bill.vendor_bill_user_group,1,1,1,0
-access_vendor_bill_validator,vendor_bill - validator,model_vendor_bill,ssi_vendor_bill.vendor_bill_validator_group,1,1,1,0
