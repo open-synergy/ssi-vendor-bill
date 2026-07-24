@@ -2,11 +2,11 @@
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo.tests import HttpCase, tagged
+from odoo.tests import HttpSavepointCase, tagged
 
 
 @tagged("post_install", "-at_install")
-class TestUiVendorBillOperatingUnit(HttpCase):
+class TestUiVendorBillOperatingUnit(HttpSavepointCase):
     """UI/UX tour test for the Operating Unit field this module adds to
     ``vendor_bill`` (E1 delta -- Additional Fields).
 
