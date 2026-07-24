@@ -33,7 +33,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 // sekadar "ada list di layar" (lihat patterns.md skill
                 // odoo-development-ui-test §A).
                 content: "Vendor Bills list is displayed",
-                trigger: ".o_control_panel .breadcrumb-item.active:contains(Vendor Bills)",
+                trigger:
+                    ".o_control_panel .breadcrumb-item.active:contains(Vendor Bills)",
                 extra_trigger: ".o_list_view",
                 run: function () {
                     // Assertion only.
@@ -90,7 +91,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 },
                 {
                     content: "Pick the vendor from the dropdown",
-                    trigger: ".ui-autocomplete .ui-menu-item a:contains(TOUR Create Vendor)",
+                    trigger:
+                        ".ui-autocomplete .ui-menu-item a:contains(TOUR Create Vendor)",
                     in_modal: false,
                 },
 
@@ -121,7 +123,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 },
                 {
                     content: "Pick the pricelist from the dropdown",
-                    trigger: ".ui-autocomplete .ui-menu-item a:contains(Public Pricelist)",
+                    trigger:
+                        ".ui-autocomplete .ui-menu-item a:contains(Public Pricelist)",
                     in_modal: false,
                 },
                 // Journal and Payable Account are automatically filled from
@@ -210,7 +213,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 // Flow 2 -- Find and open the record to edit.
                 {
                     content: "Open the record",
-                    trigger: ".o_data_row:contains(TOUR Edit Vendor) .o_data_cell:first",
+                    trigger:
+                        ".o_data_row:contains(TOUR Edit Vendor) .o_data_cell:first",
                     extra_trigger: ".o_list_view",
                 },
                 {
@@ -333,7 +337,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 // Flow 2 -- Open the record to confirm.
                 {
                     content: "Open the record",
-                    trigger: ".o_data_row:contains(TOUR Confirm Vendor) .o_data_cell:first",
+                    trigger:
+                        ".o_data_row:contains(TOUR Confirm Vendor) .o_data_cell:first",
                     extra_trigger: ".o_list_view",
                 },
                 {
@@ -438,7 +443,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 // Flow 2 -- Open the record to reject.
                 {
                     content: "Open the record",
-                    trigger: ".o_data_row:contains(TOUR Reject Vendor) .o_data_cell:first",
+                    trigger:
+                        ".o_data_row:contains(TOUR Reject Vendor) .o_data_cell:first",
                     extra_trigger: ".o_list_view",
                 },
                 {
@@ -451,7 +457,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 // Flow 3 -- Click the Reject button.
                 {
                     content: "Click the Reject button",
-                    trigger: ".o_statusbar_buttons button[name='action_reject_approval']",
+                    trigger:
+                        ".o_statusbar_buttons button[name='action_reject_approval']",
                     extra_trigger: ".o_form_view",
                 },
 
@@ -489,7 +496,8 @@ odoo.define("ssi_vendor_bill.vendor_bill_tour", function (require) {
                 // Flow 2 -- Open the record to cancel.
                 {
                     content: "Open the record",
-                    trigger: ".o_data_row:contains(TOUR Cancel Vendor) .o_data_cell:first",
+                    trigger:
+                        ".o_data_row:contains(TOUR Cancel Vendor) .o_data_cell:first",
                     extra_trigger: ".o_list_view",
                 },
                 {
