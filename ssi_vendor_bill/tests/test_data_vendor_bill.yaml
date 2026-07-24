@@ -993,3 +993,67 @@ scenarios:
           move_id:
             type: "value"
             operator: "is_falsy"
+
+  - name: "User group can delete a draft bill still numbered /"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Delete the draft bill as a user with the User group"
+        action: "unlink"
+        target: "bill"
+        as_user: "base.user_admin"
+
+      - step: "The bill no longer exists"
+        action: "search"
+        model: "vendor_bill"
+        domain:
+          - ["id", "=", "REC: bill.id"]
+        save_as: "found"
+        expect_count: 0
+
+  - name: "User group cannot delete a bill that is no longer draft"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Confirm the bill so it leaves the draft state"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Delete is rejected once the bill is no longer draft"
+        action: "unlink"
+        target: "bill"
+        as_user: "base.user_admin"
+        expect_error:
+          type: "UserError"
+          message_contains: "state is not draft"
