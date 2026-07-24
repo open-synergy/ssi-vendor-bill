@@ -6,12 +6,16 @@
 Vendor Bill
 ===========
 
-This module provides a dedicated model ``vendor_bill`` that exposes
-**only** vendor bills (purchase invoices, ``move_type = 'in_invoice'``)
-while reusing the physical ``account_move`` table and inheriting every
-method of ``account.move``. Having a dedicated model makes it possible to
-target access rights and record rules to vendor bills independently from
-other move types (customer invoices, refunds, journal entries, ...).
+This module provides ``vendor_bill``, a standalone SSI transactional
+document with its own table -- it does not reuse or extend the
+``account.move`` table. The document follows the standard SSI workflow
+(``draft`` -> ``confirm`` -> ``open``/``reject`` -> ``done``, plus
+``cancel``) with multiple approval. When the document is confirmed and
+approved into the ``open`` state, it generates its own ``account.move``
+record (linked through the ``move_id`` field). The document then
+transitions automatically to ``done`` once the payable journal item on
+that ``account.move`` is fully reconciled, and back to ``open`` if the
+reconciliation is undone.
 
 
 Work Instruction
