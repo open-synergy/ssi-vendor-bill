@@ -3,7 +3,7 @@
 ## Pre-Condition
 
 - Record is in **Draft**, **Waiting for Approval**, or **Unpaid** status.
-- User has *Can Cancel* access right (**Validator** access group).
+- User has _Can Cancel_ access right (**Validator** access group).
 
 ## Flow
 

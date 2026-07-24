@@ -3,9 +3,8 @@
 ## Pre-Condition
 
 - Record is in **Waiting for Approval** status.
-- User is registered as an active approver on the record (in
-  **Approvers**).
-- User has *Can Approve* access right.
+- User is registered as an active approver on the record (in **Approvers**).
+- User has _Can Approve_ access right.
 
 ## Flow
 
@@ -16,8 +15,7 @@
 
 ## Post-Condition
 
-- If all approval levels are fulfilled, the record automatically moves to
-  **Unpaid** status (document number is generated at this point), or
-  directly to **Paid** status when it has no detail lines.
-- If there are still pending approval levels, status remains **Waiting for
-  Approval**.
+- If all approval levels are fulfilled, the record automatically moves to **Unpaid**
+  status (document number is generated at this point), or directly to **Paid** status
+  when it has no detail lines.
+- If there are still pending approval levels, status remains **Waiting for Approval**.

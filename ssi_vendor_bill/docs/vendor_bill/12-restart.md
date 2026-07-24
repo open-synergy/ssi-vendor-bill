@@ -3,7 +3,7 @@
 ## Pre-Condition
 
 - Record is in **Cancelled** or **Rejected** status.
-- User has *Can Restart* access right (**Validator** access group).
+- User has _Can Restart_ access right (**Validator** access group).
 
 ## Flow
 

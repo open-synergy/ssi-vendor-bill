@@ -3,9 +3,8 @@
 ## Pre-Condition
 
 - Record is in **Waiting for Approval** status.
-- User is registered as an active approver on the record (in
-  **Approvers**).
-- User has *Can Reject* access right.
+- User is registered as an active approver on the record (in **Approvers**).
+- User has _Can Reject_ access right.
 
 ## Flow
 

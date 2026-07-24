@@ -3,7 +3,7 @@
 ## Pre-Condition
 
 - Record is in **Draft** status.
-- User has *Can Confirm* access right (**User** access group or higher).
+- User has _Can Confirm_ access right (**User** access group or higher).
 
 ## Flow
 
@@ -15,5 +15,5 @@
 ## Post-Condition
 
 - Status changes to **Waiting for Approval**.
-- The tax lines on the **Detail** tab are automatically recomputed from the
-  detail lines as part of confirming the record.
+- The tax lines on the **Detail** tab are automatically recomputed from the detail lines
+  as part of confirming the record.
