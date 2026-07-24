@@ -17,11 +17,13 @@
         "ssi_vendor_bill",
         "ssi_financial_accounting_operating_unit",
         "ssi_operating_unit_mixin",
+        "web_tour",
     ],
     "data": [
         "security/res_group/vendor_bill.xml",
         "security/ir_rule/vendor_bill.xml",
         "views/vendor_bill_views.xml",
+        "views/assets.xml",
     ],
     "demo": [],
 }
