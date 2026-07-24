@@ -32,6 +32,15 @@ Vendor Bill
 * `Auto Transition to Paid - Vendor Bill <docs/vendor_bill/20-auto-paid.html>`_
 * `Auto Transition to Unpaid - Vendor Bill <docs/vendor_bill/21-auto-unpaid.html>`_
 
+Vendor Bill Type
+----------------
+
+* `Create Vendor Bill Type <docs/vendor_bill_type/01-create.html>`_
+* `Edit Vendor Bill Type <docs/vendor_bill_type/02-edit.html>`_
+* `Delete Vendor Bill Type <docs/vendor_bill_type/03-delete.html>`_
+* `Deactivate Vendor Bill Type <docs/vendor_bill_type/04-deactivate.html>`_
+* `Activate Vendor Bill Type <docs/vendor_bill_type/05-activate.html>`_
+
 
 Installation
 ============
