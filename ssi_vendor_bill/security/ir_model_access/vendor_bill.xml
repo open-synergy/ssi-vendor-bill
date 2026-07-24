@@ -19,7 +19,7 @@
     <field name="perm_read" eval="1" />
     <field name="perm_write" eval="1" />
     <field name="perm_create" eval="1" />
-    <field name="perm_unlink" eval="0" />
+    <field name="perm_unlink" eval="1" />
 </record>
 
 <record id="vendor_bill_line_all_access" model="ir.model.access">
