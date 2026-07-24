@@ -14,6 +14,25 @@ target access rights and record rules to vendor bills independently from
 other move types (customer invoices, refunds, journal entries, ...).
 
 
+Work Instruction
+=================
+
+Vendor Bill
+-----------
+
+* `Create Vendor Bill <docs/vendor_bill/01-create.html>`_
+* `Edit Vendor Bill <docs/vendor_bill/02-edit.html>`_
+* `Delete Vendor Bill <docs/vendor_bill/03-delete.html>`_
+* `Confirm Vendor Bill <docs/vendor_bill/04-confirm.html>`_
+* `Approve Vendor Bill <docs/vendor_bill/05-approve.html>`_
+* `Reject Vendor Bill <docs/vendor_bill/06-reject.html>`_
+* `Cancel Vendor Bill <docs/vendor_bill/10-cancel.html>`_
+* `Restart Vendor Bill <docs/vendor_bill/12-restart.html>`_
+* `Compute Tax - Vendor Bill <docs/vendor_bill/14-compute-tax.html>`_
+* `Auto Transition to Paid - Vendor Bill <docs/vendor_bill/20-auto-paid.html>`_
+* `Auto Transition to Unpaid - Vendor Bill <docs/vendor_bill/21-auto-unpaid.html>`_
+
+
 Installation
 ============
 
