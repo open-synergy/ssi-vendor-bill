@@ -4,7 +4,7 @@
 
 {
     "name": "Vendor Bill",
-    "version": "14.0.2.2.3",
+    "version": "14.0.2.2.4",
     "website": "https://simetri-sinergi.id",
     "author": "OpenSynergy Indonesia, PT. Simetri Sinergi Indonesia",
     "contributors": [
