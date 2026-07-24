@@ -15,6 +15,11 @@ posted with it, keeping the resulting journal entries scoped to the same
 operating unit. Visibility of vendor bills is restricted per operating
 unit through a record rule.
 
+Work Instruction
+================
+
+* `Create Vendor Bill <docs/vendor_bill/01-create.html>`_
+
 
 Bug Tracker
 ===========
