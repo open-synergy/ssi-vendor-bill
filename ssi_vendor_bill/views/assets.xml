@@ -13,6 +13,10 @@
                 type="text/javascript"
                 src="/ssi_vendor_bill/static/tests/tours/vendor_bill_tour.js"
             />
+        <script
+                type="text/javascript"
+                src="/ssi_vendor_bill/static/tests/tours/vendor_bill_type_tour.js"
+            />
     </xpath>
 </template>
 </odoo>
