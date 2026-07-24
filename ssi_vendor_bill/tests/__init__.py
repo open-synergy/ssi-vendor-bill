@@ -6,3 +6,4 @@ from . import test_vendor_bill
 from . import test_vendor_bill_line
 from . import test_vendor_bill_type
 from . import test_ui_vendor_bill
+from . import test_ui_vendor_bill_type
