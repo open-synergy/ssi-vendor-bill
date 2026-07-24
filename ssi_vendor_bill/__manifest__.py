@@ -28,6 +28,7 @@
         "ssi_accounting_entry_mixin",
         "ssi_transaction_pricelist_mixin",
         "base_automation",
+        "web_tour",
     ],
     "data": [
         "security/ir_module_category/vendor_bill.xml",
@@ -44,6 +45,7 @@
         "data/base_automation.xml",
         "views/vendor_bill.xml",
         "views/vendor_bill_type_views.xml",
+        "views/assets.xml",
     ],
     "demo": [],
 }
