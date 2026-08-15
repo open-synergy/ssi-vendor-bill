@@ -4,7 +4,7 @@
 from odoo import _, api, fields, models
 
 
-class VendorBillClaudeCodeImportWizard(models.TransientModel):
+class ImportVendorBillClaudeCode(models.TransientModel):
     """
     Wizard opened from the "AI Import" button on a draft vendor bill.
 
@@ -13,8 +13,8 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
     extraction runs in the background instead of blocking the web request.
     """
 
-    _name = "vendor.bill.claude.code.import.wizard"
-    _description = "Vendor Bill Claude Code Import Wizard"
+    _name = "import_vendor_bill_claude_code"
+    _description = "Import Vendor Bill Claude Code"
 
     move_id = fields.Many2one(
         string="Vendor Bill",
@@ -42,6 +42,11 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
 
     @api.model
     def default_get(self, fields_list):
+        """Preselect the journal's default backend when opened from a bill.
+
+        :param fields_list: field names requested by the client
+        :return: dict of default values
+        """
         res = super().default_get(fields_list)
         if "backend_id" in fields_list and not res.get("backend_id"):
             move_id = res.get("move_id") or self.env.context.get("default_move_id")
@@ -53,11 +58,23 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
         return res
 
     def action_import(self):
+        """Create the attachment and job, then queue the AI extraction.
+
+        :return: an ``ir.actions.client`` display_notification dict
+        """
         for record in self.sudo():
             result = record._import()
         return result
 
     def _import(self):
+        """Attach the uploaded file, create the job, and enqueue it.
+
+        Side effect: creates an ``ir.attachment`` linked to ``move_id``,
+        creates a ``vendor.bill.claude.code.job``, sets it as the vendor
+        bill's main attachment, and calls ``action_enqueue`` on the job.
+
+        :return: an ``ir.actions.client`` display_notification dict
+        """
         self.ensure_one()
         attachment = self.env["ir.attachment"].sudo().create(self._prepare_attachment())
         job = (
@@ -85,8 +102,15 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
         }
 
     def _set_main_attachment(self, attachment):
-        """Show the uploaded file in the vendor bill's document preview panel so
-        the extracted data can be checked against the source document."""
+        """Show the uploaded file in the vendor bill's preview panel.
+
+        Only sets it when the vendor bill has no main attachment yet, so
+        the extracted data can be checked against the source document
+        without overwriting an existing one.
+
+        :param attachment: the ``ir.attachment`` just created for the
+            uploaded vendor bill file
+        """
         self.ensure_one()
         if self.move_id.message_main_attachment_id:
             return
@@ -95,6 +119,13 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
         )
 
     def _prepare_attachment(self):
+        """Build the ``ir.attachment`` values for the uploaded file.
+
+        Extension point: override to change how the uploaded vendor bill
+        file is stored.
+
+        :return: dict of ``ir.attachment`` values
+        """
         self.ensure_one()
         return {
             "name": self.filename or "vendor_bill",
@@ -105,6 +136,14 @@ class VendorBillClaudeCodeImportWizard(models.TransientModel):
         }
 
     def _prepare_job(self, attachment):
+        """Build the ``vendor.bill.claude.code.job`` values to create.
+
+        Extension point: override to add fields to the job created for
+        each import.
+
+        :param attachment: the ``ir.attachment`` holding the uploaded file
+        :return: dict of ``vendor.bill.claude.code.job`` values
+        """
         self.ensure_one()
         return {
             "attachment_id": attachment.id,

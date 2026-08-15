@@ -17,6 +17,25 @@ vendor bill, and the original file is attached. Because a single extraction can
 take up to the service timeout, processing never blocks the web request.
 
 
+Work Instruction
+================
+
+Vendor Bill AI Backend
+-----------------------
+
+* `Create Vendor Bill AI Backend <docs/vendor_bill_claude_code_backend/01-create.html>`_
+* `Edit Vendor Bill AI Backend <docs/vendor_bill_claude_code_backend/02-edit.html>`_
+* `Delete Vendor Bill AI Backend <docs/vendor_bill_claude_code_backend/03-delete.html>`_
+* `Deactivate Vendor Bill AI Backend <docs/vendor_bill_claude_code_backend/04-deactivate.html>`_
+* `Activate Vendor Bill AI Backend <docs/vendor_bill_claude_code_backend/05-activate.html>`_
+
+Vendor Bill AI Import Job
+--------------------------
+
+* `Import Vendor Bill via AI <docs/vendor_bill_claude_code_job/01-import.html>`_
+* `Retry Vendor Bill AI Import Job <docs/vendor_bill_claude_code_job/02-retry.html>`_
+
+
 Installation
 ============
 

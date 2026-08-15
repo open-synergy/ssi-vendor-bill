@@ -1,0 +1,140 @@
+setup:
+  steps:
+    - step: "Get first purchase journal"
+      action: "search"
+      model: "account.journal"
+      domain: [["type", "=", "purchase"]]
+      save_as: "journal"
+      limit: 1
+
+scenarios:
+  - name: "Extraction failure raises UserError"
+    steps:
+      - step: "Create backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        save_as: "backend"
+        values:
+          name: "Test Backend"
+          code: "BL245-FAILSTATUS"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
+      - step: "A failed-status response raises UserError"
+        action: "call"
+        target: "backend"
+        method: "_transform_result"
+        args:
+          - status: "failed"
+            error: "Could not read the file"
+        expect_error:
+          type: "UserError"
+
+  - name: "Non-configurator user cannot create backend"
+    steps:
+      - step: "Demo user cannot create a backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        as_user: "base.user_demo"
+        expect_error:
+          type: "AccessError"
+        values:
+          name: "Unauthorized Backend"
+          code: "UNAUTH-TEST"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
+
+  - name: "User without accounting group cannot open the import wizard"
+    steps:
+      - step: "Create draft vendor bill"
+        action: "create"
+        model: "account.move"
+        save_as: "move"
+        values:
+          move_type: "in_invoice"
+          journal_id: "REC: journal.id"
+      - step: "Create backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        save_as: "backend"
+        values:
+          name: "Test Backend"
+          code: "BL245-NOACCESS"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
+      - step: "Create an internal user without the Billing group"
+        # base.user_demo is NOT a usable negative here: core Odoo's own
+        # account/demo/account_demo.xml adds base.user_demo to
+        # account.group_account_invoice when demo data is loaded, so it
+        # already has legitimate access. A dedicated user holding only
+        # base.group_user is required to prove the ACL actually denies
+        # non-Billing users.
+        action: "create"
+        model: "res.users"
+        save_as: "no_billing_user"
+        values:
+          name: "No Billing Access"
+          login: "no-billing-access-tour"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+      - step: "User without the Billing group cannot create the import wizard"
+        action: "create"
+        model: "import_vendor_bill_claude_code"
+        as_user: "no_billing_user"
+        expect_error:
+          type: "AccessError"
+        values:
+          move_id: "REC: move.id"
+          backend_id: "REC: backend.id"
+          filename: "bill.pdf"
+          data_file: "ZHVtbXkgcGRmIGNvbnRlbnQ="
+
+  - name: "Retry guard rejects state other than failed/need_review"
+    steps:
+      - step: "Create draft vendor bill"
+        action: "create"
+        model: "account.move"
+        save_as: "move"
+        values:
+          move_type: "in_invoice"
+          journal_id: "REC: journal.id"
+      - step: "Create backend"
+        action: "create"
+        model: "vendor.bill.claude.code.backend"
+        save_as: "backend"
+        values:
+          name: "Test Backend"
+          code: "BL245-RETRY"
+          base_url: "https://vendor-bill.example.com"
+          bearer_token: "test-token"
+      - step: "Create attachment"
+        action: "create"
+        model: "ir.attachment"
+        save_as: "attachment"
+        values:
+          name: "bill.pdf"
+          datas: "ZHVtbXkgcGRmIGNvbnRlbnQ="
+          type: "binary"
+      - step: "Create job in draft state"
+        action: "create"
+        model: "vendor.bill.claude.code.job"
+        save_as: "job"
+        values:
+          attachment_id: "REC: attachment.id"
+          source_filename: "bill.pdf"
+          move_id: "REC: move.id"
+          backend_id: "REC: backend.id"
+      - step: "Assert job starts in draft state"
+        action: "assert"
+        target: "job"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+      - step: "Retry from draft state is rejected"
+        action: "call"
+        target: "job"
+        method: "action_retry"
+        expect_error:
+          type: "UserError"

@@ -240,6 +240,12 @@ Solution: Check the source file quality (scan/photo legibility) and retry
         return (0, 0, vals)
 
     def action_test_connection(self):
+        """Verify the Base URL and Bearer Token against the service.
+
+        :return: an ``ir.actions.client`` display_notification dict
+        :raises odoo.exceptions.UserError: when the service is
+            unreachable or rejects the Bearer Token
+        """
         for record in self.sudo():
             result = record._test_connection()
         return result

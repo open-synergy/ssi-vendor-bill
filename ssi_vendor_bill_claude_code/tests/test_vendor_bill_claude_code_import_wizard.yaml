@@ -33,7 +33,7 @@ scenarios:
           bearer_token: "test-token"
       - step: "Create import wizard"
         action: "create"
-        model: "vendor.bill.claude.code.import.wizard"
+        model: "import_vendor_bill_claude_code"
         save_as: "wizard"
         values:
           move_id: "REC: move.id"
@@ -112,7 +112,7 @@ scenarios:
           message_main_attachment_id: "REC: existing.id"
       - step: "Create import wizard"
         action: "create"
-        model: "vendor.bill.claude.code.import.wizard"
+        model: "import_vendor_bill_claude_code"
         save_as: "wizard"
         values:
           move_id: "REC: move.id"

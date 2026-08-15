@@ -4,3 +4,5 @@
 from . import test_vendor_bill_claude_code_backend
 from . import test_vendor_bill_claude_code_import
 from . import test_vendor_bill_claude_code_import_wizard
+from . import test_ui_vendor_bill_claude_code_backend
+from . import test_ui_vendor_bill_claude_code_job
