@@ -124,7 +124,7 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: code:addons/ssi_vendor_bill_claude_code/wizards/vendor_bill_claude_code_import_wizard.py:0
+#: code:addons/ssi_vendor_bill_claude_code/wizards/import_vendor_bill_claude_code.py:0
 #: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.account_move_claude_code_form
 #, python-format
 msgid "AI Import"
@@ -137,7 +137,7 @@ msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
 #: code:addons/ssi_vendor_bill_claude_code/models/account_move.py:0
-#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.vendor_bill_claude_code_import_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.import_vendor_bill_claude_code_view_form
 #, python-format
 msgid "AI Import Vendor Bill"
 msgstr ""
@@ -187,14 +187,14 @@ msgid "Attachment Count"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__backend_id
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__backend_id
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__backend_id
 #: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.vendor_bill_claude_code_job_view_search
 msgid "Backend"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__backend_id
+#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__backend_id
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__backend_id
 msgid "Backend configuration used to call the claude-code extraction service."
 msgstr ""
@@ -218,7 +218,7 @@ msgid "Bearer Token"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.vendor_bill_claude_code_import_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.import_vendor_bill_claude_code_view_form
 msgid "Cancel"
 msgstr ""
 
@@ -253,15 +253,15 @@ msgid "Connection Successful"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__create_uid
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_backend__create_uid
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__create_uid
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__create_uid
 msgid "Created by"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__create_date
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_backend__create_date
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__create_date
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__create_date
 msgid "Created on"
 msgstr ""
@@ -282,8 +282,8 @@ msgstr ""
 #. module: ssi_vendor_bill_claude_code
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_journal__display_name
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_move__display_name
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__display_name
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_backend__display_name
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__display_name
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__display_name
 msgid "Display Name"
 msgstr ""
@@ -307,7 +307,7 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__move_id
+#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__move_id
 msgid "Draft vendor bill the extracted data will be written back to."
 msgstr ""
 
@@ -349,7 +349,7 @@ msgid "Failed"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__filename
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__filename
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__source_filename
 msgid "Filename"
 msgstr ""
@@ -382,8 +382,8 @@ msgstr ""
 #. module: ssi_vendor_bill_claude_code
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_journal__id
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_move__id
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__id
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_backend__id
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__id
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__id
 msgid "ID"
 msgstr ""
@@ -416,8 +416,13 @@ msgid "If checked, some messages have a delivery error."
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.vendor_bill_claude_code_import_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:ssi_vendor_bill_claude_code.import_vendor_bill_claude_code_view_form
 msgid "Import"
+msgstr ""
+
+#. module: ssi_vendor_bill_claude_code
+#: model:ir.model,name:ssi_vendor_bill_claude_code.model_import_vendor_bill_claude_code
+msgid "Import Vendor Bill Claude Code"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
@@ -453,22 +458,22 @@ msgstr ""
 #. module: ssi_vendor_bill_claude_code
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_journal____last_update
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_account_move____last_update
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code____last_update
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_backend____last_update
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard____last_update
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job____last_update
 msgid "Last Modified on"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__write_uid
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_backend__write_uid
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__write_uid
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__write_uid
 msgid "Last Updated by"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__write_date
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_backend__write_date
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__write_date
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__write_date
 msgid "Last Updated on"
 msgstr ""
@@ -605,7 +610,7 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__filename
+#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__filename
 #: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__source_filename
 msgid "Original filename of the uploaded vendor bill file."
 msgstr ""
@@ -618,7 +623,7 @@ msgid ""
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__data_file
+#: model:ir.model.fields,help:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__data_file
 msgid "PDF or image (PNG/JPEG/WEBP/HEIC) of the vendor bill to extract."
 msgstr ""
 
@@ -718,7 +723,7 @@ msgid "Unread Messages Counter"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__move_id
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__move_id
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__move_id
 msgid "Vendor Bill"
 msgstr ""
@@ -751,12 +756,7 @@ msgid "Vendor Bill Claude Code Import Job"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: model:ir.model,name:ssi_vendor_bill_claude_code.model_vendor_bill_claude_code_import_wizard
-msgid "Vendor Bill Claude Code Import Wizard"
-msgstr ""
-
-#. module: ssi_vendor_bill_claude_code
-#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_import_wizard__data_file
+#: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_import_vendor_bill_claude_code__data_file
 #: model:ir.model.fields,field_description:ssi_vendor_bill_claude_code.field_vendor_bill_claude_code_job__attachment_id
 msgid "Vendor Bill File"
 msgstr ""
@@ -768,7 +768,7 @@ msgid "Vendor VAT hint: %s"
 msgstr ""
 
 #. module: ssi_vendor_bill_claude_code
-#: code:addons/ssi_vendor_bill_claude_code/wizards/vendor_bill_claude_code_import_wizard.py:0
+#: code:addons/ssi_vendor_bill_claude_code/wizards/import_vendor_bill_claude_code.py:0
 #, python-format
 msgid ""
 "Vendor bill file '%s' queued for AI extraction. It is processed in the "
