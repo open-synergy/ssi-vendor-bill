@@ -18,6 +18,15 @@ class VendorBillLine(models.Model):
     ]
 
     def _prepare_standard_ml(self):
+        """Add ``operating_unit_id`` to this detail line's journal item.
+
+        Extends ``mixin.account_move_single_line``'s
+        ``_prepare_standard_ml()``: the expense line generated for this
+        detail line carries the parent ``vendor_bill``'s Operating Unit,
+        not its own (this model has no such field).
+
+        :return: dict of ``account.move.line`` values
+        """
         self.ensure_one()
         res = super()._prepare_standard_ml()
         res.update(

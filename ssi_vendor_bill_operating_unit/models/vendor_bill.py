@@ -28,6 +28,14 @@ class VendorBill(models.Model):
     )
 
     def _prepare_standard_move(self):
+        """Add ``operating_unit_id`` to the ``account.move`` header values.
+
+        Extends ``mixin.account_move``'s ``_prepare_standard_move()``: the
+        move created for this bill carries the same Operating Unit as the
+        bill itself.
+
+        :return: dict of ``account.move`` values
+        """
         self.ensure_one()
         res = super()._prepare_standard_move()
         res.update(
@@ -38,6 +46,14 @@ class VendorBill(models.Model):
         return res
 
     def _prepare_standard_ml(self):
+        """Add ``operating_unit_id`` to the payable journal item values.
+
+        Extends ``mixin.account_move_single_line``'s
+        ``_prepare_standard_ml()``: the payable line generated for this bill
+        carries the same Operating Unit as the bill itself.
+
+        :return: dict of ``account.move.line`` values
+        """
         self.ensure_one()
         res = super()._prepare_standard_ml()
         res.update(
