@@ -9,7 +9,13 @@ from odoo.tests import tagged
 
 @tagged("post_install", "-at_install")
 class TestSSIVendorBillOperatingUnit(YamlTransactionCase):
+    """Cover the Operating Unit field added to ``vendor_bill`` by this
+    module: default value, propagation to the accounting entry, record
+    rule visibility, and the local-group-implies-OU-group relation.
+    """
+
     def test_ssi_vendor_bill_operating_unit(self):
+        """Run the Operating Unit YAML scenarios for ``vendor_bill``."""
         self.run_yaml_scenario("vendor_bill_ou.yaml")
 
     def _create_bill(self, operating_unit=False, prefix="P3"):

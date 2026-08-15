@@ -17,6 +17,12 @@ class TestUiVendorBillOperatingUnit(HttpSavepointCase):
 
     @classmethod
     def setUpClass(cls):
+        """Prepare the OU-visible admin user and vendor bill fixtures.
+
+        Grants the admin user the multi-operating-unit group and an
+        assigned/default Operating Unit, plus the Type/Journal/Payable
+        Account needed to open the vendor bill create form.
+        """
         super().setUpClass()
 
         # Pre-Condition: the Operating Unit field is gated by the multi
