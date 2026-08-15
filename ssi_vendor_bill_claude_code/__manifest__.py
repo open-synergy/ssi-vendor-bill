@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     "name": "SSI Vendor Bill Claude Code Import",
-    "version": "14.0.1.1.0",
+    "version": "14.0.1.1.1",
     "summary": "Import vendor bills from PDF/PNG using the "
     "odoo-vendor-bill-claude-code-extract AI service, processed "
     "asynchronously via queue_job",
