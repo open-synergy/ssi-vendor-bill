@@ -4,13 +4,14 @@
 import base64
 from unittest.mock import Mock, patch
 
-from odoo.exceptions import AccessError, UserError
+from odoo_yaml_test import YamlTransactionCase
+
+from odoo.exceptions import UserError
 from odoo.tests import Form, tagged
-from odoo.tests.common import TransactionCase
 
 _BACKEND_MODEL = "vendor.bill.claude.code.backend"
 _JOB_MODEL = "vendor.bill.claude.code.job"
-_WIZARD_MODEL = "vendor.bill.claude.code.import.wizard"
+_WIZARD_MODEL = "import_vendor_bill_claude_code"
 _CALL_SERVICE_PATH = (
     "odoo.addons.ssi_vendor_bill_claude_code.models."
     "vendor_bill_claude_code_backend."
@@ -90,8 +91,20 @@ def _sample_response(
 
 
 @tagged("post_install", "-at_install")
-class TestVendorBillClaudeCodeImport(TransactionCase):
+class TestVendorBillClaudeCodeImport(YamlTransactionCase):
+    """Covers the claude-code job pipeline: pure transforms, mocked HTTP
+    calls to the extraction service, and the wizard's async enqueue path.
+
+    Declarative scenarios (backend security, wizard security, job retry
+    guard, and the failed-status transform) live in
+    ``test_vendor_bill_claude_code_import.yaml`` — this class only holds
+    what YAML cannot express: return-value assertions (P1) and
+    mock/patch-based HTTP stubbing (P6). See
+    ``odoo-development-unit-test`` § ``python-escape-hatch.md``.
+    """
+
     def setUp(self):
+        """Create a shared backend, purchase journal, and product."""
         super().setUp()
         self.backend = self.env[_BACKEND_MODEL].create(
             {
@@ -106,7 +119,15 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         )
         self.product = self.env["product.product"].search([], limit=1)
 
+    def test_declarative_scenarios(self):
+        """Run the backend/wizard security and job retry-guard scenario."""
+        self.run_yaml_scenario("test_vendor_bill_claude_code_import.yaml")
+
     def _make_move(self):
+        """Create a draft ``in_invoice`` vendor bill on the test journal.
+
+        :return: the created ``account.move`` record
+        """
         return self.env["account.move"].create(
             {
                 "move_type": "in_invoice",
@@ -115,6 +136,11 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         )
 
     def _make_attachment(self, filename="bill.pdf"):
+        """Create a dummy attachment standing in for an uploaded file.
+
+        :param filename: name given to the attachment
+        :return: the created ``ir.attachment`` record
+        """
         return self.env["ir.attachment"].create(
             {
                 "name": filename,
@@ -124,6 +150,13 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         )
 
     def _make_job(self, move, unique_suffix="a", filename="bill.pdf"):
+        """Create a claude-code job for ``move`` against the shared backend.
+
+        :param move: the ``account.move`` the job writes back to
+        :param unique_suffix: distinguishes attachments across calls
+        :param filename: name given to the job's attachment
+        :return: the created ``vendor.bill.claude.code.job`` record
+        """
         attachment = self._make_attachment(filename)
         return self.env[_JOB_MODEL].create(
             {
@@ -139,6 +172,12 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
     # ------------------------------------------------------------------
 
     def test_transform_result_returns_move_vals_and_meta(self):
+        """Assert the ``(move_vals, meta)`` pair built from a response.
+
+        Pure Python — trigger P1 (L-01/L-02: ``_transform_result`` is a
+        plain method call whose nested-dict return value ``action: call``
+        discards and a YAML ``assert`` step cannot inspect).
+        """
         response = _sample_response(
             product_id=42,
             account_id=7,
@@ -180,22 +219,26 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         self.assertEqual(meta["external_status"], "ok")
 
     def test_transform_result_empty_line_name_defaults_na(self):
+        """Assert a line with no ``name`` defaults to ``'N/A'``.
+
+        Pure Python — trigger P1 (L-01/L-02), see
+        ``test_transform_result_returns_move_vals_and_meta``.
+        """
         response = _sample_response()
         response["result"]["bill"]["lines"][0]["name"] = None
         move_vals, _meta = self.backend._transform_result(response)
         self.assertEqual(move_vals["invoice_line_ids"][0][2]["name"], "N/A")
-
-    def test_transform_result_failed_status_raises(self):
-        response = _sample_response(status="failed")
-        response["error"] = "Could not read the file"
-        with self.assertRaises(UserError):
-            self.backend._transform_result(response)
 
     # ------------------------------------------------------------------
     # Job _run — mocked HTTP call
     # ------------------------------------------------------------------
 
     def test_run_success_writes_move(self):
+        """Write the move and set state 'done' on a fully resolved run.
+
+        Pure Python — trigger P6 (L-15: ``_call_service`` is stubbed via
+        ``unittest.mock.patch``, which YAML has no equivalent for).
+        """
         if not self.purchase_journal:
             self.skipTest("No purchase journal found in test environment")
         # A fully resolvable response (partner matched by VAT, no warnings,
@@ -221,6 +264,11 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         self.assertEqual(move.ref, "INV/2026/success")
 
     def test_run_resolves_partner_by_vat(self):
+        """Resolve the vendor by VAT when the line does not carry one.
+
+        Pure Python — trigger P6 (L-15), see
+        ``test_run_success_writes_move``.
+        """
         if not self.purchase_journal:
             self.skipTest("No purchase journal found in test environment")
         vendor = self.env["res.partner"].create(
@@ -238,6 +286,11 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         self.assertEqual(move.partner_id, vendor)
 
     def test_run_need_review_on_warnings(self):
+        """Set state 'need_review' when the service returns warnings.
+
+        Pure Python — trigger P6 (L-15), see
+        ``test_run_success_writes_move``.
+        """
         if not self.purchase_journal:
             self.skipTest("No purchase journal found in test environment")
         move = self._make_move()
@@ -255,6 +308,11 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         self.assertEqual(len(move.invoice_line_ids), 2)
 
     def test_run_error_path_sets_failed(self):
+        """Set state 'failed' and record the error when the call raises.
+
+        Pure Python — trigger P6 (L-15), see
+        ``test_run_success_writes_move``.
+        """
         move = self._make_move()
         job = self._make_job(move, unique_suffix="error")
         with patch(_CALL_SERVICE_PATH, side_effect=UserError("boom")):
@@ -263,17 +321,19 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         self.assertIn("boom", job.error_message)
         self.assertFalse(move.invoice_line_ids)
 
-    def test_retry_only_allowed_from_failed_or_need_review(self):
-        move = self._make_move()
-        job = self._make_job(move, unique_suffix="retryguard")
-        with self.assertRaises(UserError):
-            job.action_retry()
-
     # ------------------------------------------------------------------
     # Wizard enqueue path — does NOT call the service synchronously
     # ------------------------------------------------------------------
 
     def test_wizard_import_enqueues_job_not_sync_call(self):
+        """Assert ``action_import`` never calls the service synchronously.
+
+        Pure Python — trigger P6 (L-15: asserting a mock was never
+        called has no YAML equivalent). The resulting job/attachment
+        wiring is already covered declaratively by
+        ``test_vendor_bill_claude_code_import_wizard.yaml``; this method
+        only adds the assertion YAML cannot make.
+        """
         move = self._make_move()
         wizard = self.env[_WIZARD_MODEL].create(
             {
@@ -284,22 +344,21 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
             }
         )
         with patch(_CALL_SERVICE_PATH) as mocked_call:
-            action = wizard.action_import()
+            wizard.action_import()
             mocked_call.assert_not_called()
 
         jobs = self.env[_JOB_MODEL].search([("move_id", "=", move.id)])
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs.state, "queued")
-        self.assertEqual(jobs.backend_id, self.backend)
-        self.assertEqual(jobs.attachment_id.res_model, "account.move")
-        self.assertEqual(jobs.attachment_id.res_id, move.id)
-        self.assertEqual(move.message_main_attachment_id, jobs.attachment_id)
-        self.assertEqual(action["tag"], "display_notification")
-        self.assertEqual(
-            action["params"]["next"]["type"], "ir.actions.act_window_close"
-        )
 
     def test_wizard_preselect_backend_from_journal_default(self):
+        """Preselect the journal's default backend when opening the form.
+
+        Pure Python — trigger P1 (L-01/L-02: this exercises
+        ``default_get()``, whose return value only the ``Form`` API can
+        surface — a YAML ``form`` step tests ``@api.onchange``, not
+        ``default_get``).
+        """
         if not self.purchase_journal:
             self.skipTest("No purchase journal found in test environment")
         self.purchase_journal.write({"default_claude_code_backend_id": self.backend.id})
@@ -312,6 +371,11 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
     # ------------------------------------------------------------------
 
     def test_test_connection_success(self):
+        """Report success when health and auth checks both pass.
+
+        Pure Python — trigger P6 (L-15: ``requests.get`` is stubbed via
+        ``unittest.mock.patch``).
+        """
         health_response = Mock(status_code=200)
         health_response.json.return_value = {"status": "ok", "version": "0.2.0"}
         me_response = Mock(status_code=200)
@@ -321,25 +385,14 @@ class TestVendorBillClaudeCodeImport(TransactionCase):
         self.assertEqual(result["params"]["type"], "success")
 
     def test_test_connection_unauthorized_raises(self):
+        """Raise ``UserError`` when the Bearer Token is rejected.
+
+        Pure Python — trigger P6 (L-15), see
+        ``test_test_connection_success``.
+        """
         health_response = Mock(status_code=200)
         health_response.json.return_value = {"status": "ok", "version": "0.2.0"}
         me_response = Mock(status_code=401)
         with patch(_REQUESTS_GET_PATH, side_effect=[health_response, me_response]):
             with self.assertRaises(UserError):
                 self.backend.action_test_connection()
-
-    # ------------------------------------------------------------------
-    # Security
-    # ------------------------------------------------------------------
-
-    def test_non_configurator_cannot_create_backend(self):
-        demo_user = self.env.ref("base.user_demo")
-        with self.assertRaises(AccessError):
-            self.env[_BACKEND_MODEL].with_user(demo_user).create(
-                {
-                    "name": "Unauthorized Backend",
-                    "code": "UNAUTH-TEST",
-                    "base_url": "https://vendor-bill.example.com",
-                    "bearer_token": "test-token",
-                }
-            )

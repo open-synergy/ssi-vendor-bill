@@ -16,7 +16,7 @@ class VendorBillClaudeCodeJob(models.Model):
     Tracks one asynchronous vendor bill extraction request sent to a
     Vendor Bill Claude Code backend.
 
-    A job is created by the ``vendor.bill.claude.code.import.wizard`` when a
+    A job is created by the ``import_vendor_bill_claude_code`` wizard when a
     user clicks "AI Import" on a draft vendor bill, then processed in the
     background via ``queue_job`` (``_run``) since a single extraction can
     take up to the backend's configured timeout. Progress and failures are
@@ -119,6 +119,11 @@ class VendorBillClaudeCodeJob(models.Model):
 
     @api.model
     def create(self, vals):
+        """Assign the next ``vendor.bill.claude.code.job`` sequence value.
+
+        :param vals: values passed to create
+        :return: the created record
+        """
         if vals.get("name", "New") in (False, "New"):
             vals["name"] = (
                 self.env["ir.sequence"].next_by_code("vendor.bill.claude.code.job")
@@ -127,10 +132,15 @@ class VendorBillClaudeCodeJob(models.Model):
         return super().create(vals)
 
     def action_enqueue(self):
+        """Queue this job for background processing via ``queue_job``."""
         for record in self.sudo():
             record._enqueue()
 
     def _enqueue(self):
+        """Mark the job 'queued' and schedule ``_run`` via ``with_delay``.
+
+        Side effect: clears any previous ``error_message``.
+        """
         self.ensure_one()
         self.write({"state": "queued", "error_message": False})
         self.with_delay(
@@ -139,10 +149,20 @@ class VendorBillClaudeCodeJob(models.Model):
         )._run()
 
     def action_retry(self):
+        """Re-enqueue a failed or need-review job.
+
+        :raises odoo.exceptions.UserError: when the job is not currently
+            'Failed' or 'Need Review'
+        """
         for record in self.sudo():
             record._retry()
 
     def _retry(self):
+        """Validate the job's state, then re-enqueue it via ``_enqueue``.
+
+        :raises odoo.exceptions.UserError: when the job is not currently
+            'Failed' or 'Need Review'
+        """
         self.ensure_one()
         if self.state not in ("failed", "need_review"):
             error_message = (
@@ -161,11 +181,20 @@ Solution: Wait for the current job to finish, or check its result
         self._enqueue()
 
     def action_open_move(self):
+        """Open the vendor bill this job wrote data onto.
+
+        :return: an ``ir.actions.act_window`` dict opening the bill form
+        """
         for record in self.sudo():
             result = record._open_move()
         return result
 
     def _open_move(self):
+        """Build the act_window dict opening ``move_id`` in form view.
+
+        :return: an ``ir.actions.act_window`` dict, ``res_id`` set to
+            ``move_id``
+        """
         self.ensure_one()
         action = self.env["ir.actions.actions"]._for_xml_id(
             "account.action_move_in_invoice_type"

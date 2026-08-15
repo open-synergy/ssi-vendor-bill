@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- import_vendor_bill_claude_code — running this wizard creates a
+         vendor.bill.claude.code.job that writes back onto an account.move
+         vendor bill, so access is scoped to the group that owns that
+         output (account.group_account_invoice), not to base.group_user. -->
+    <record
+        id="import_vendor_bill_claude_code_user_access"
+        model="ir.model.access"
+    >
+        <field name="name">import_vendor_bill_claude_code - user</field>
+        <field name="model_id" ref="model_import_vendor_bill_claude_code" />
+        <field name="group_id" ref="account.group_account_invoice" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+</odoo>

@@ -8,5 +8,8 @@ from odoo.tests import tagged
 
 @tagged("post_install", "-at_install")
 class TestVendorBillClaudeCodeBackend(YamlTransactionCase):
+    """Covers create/edit/delete of ``vendor.bill.claude.code.backend``."""
+
     def test_vendor_bill_claude_code_backend(self):
+        """Run the create/edit/delete scenario for the backend model."""
         self.run_yaml_scenario("test_vendor_bill_claude_code_backend.yaml")

@@ -5,6 +5,13 @@ from odoo import fields, models
 
 
 class AccountJournal(models.Model):
+    """
+    Adds a default claude-code backend to purchase journals.
+
+    The default is used to preselect the backend on the AI Import
+    wizard when it is opened from a vendor bill posted on this journal.
+    """
+
     _inherit = "account.journal"
 
     default_claude_code_backend_id = fields.Many2one(
