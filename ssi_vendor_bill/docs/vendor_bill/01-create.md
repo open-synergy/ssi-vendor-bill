@@ -1,5 +1,11 @@
 # Create Vendor Bill
 
+> **Module:** ssi_vendor_bill\
+> **Model:** `vendor_bill`\
+> **Menu:** Financial Accounting > Account Payable > Vendor Bill\
+> **Actor:** user in group `Vendor Bill / User`\
+> **State:** `—` → `draft`
+
 ## Pre-Condition
 
 - None.

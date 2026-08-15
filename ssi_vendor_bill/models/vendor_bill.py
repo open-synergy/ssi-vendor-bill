@@ -307,6 +307,12 @@ class VendorBill(models.Model):
     # G. Compute Methods
     @api.depends("type_id")
     def _compute_allowed_currency_ids(self):
+        """Compute the currencies selectable on this document.
+
+        Delegates to ``mixin.many2one_configurator`` using the
+        currency selection method (manual/domain/code) configured on
+        ``type_id``. Empty when no ``type_id`` is set yet.
+        """
         for record in self:
             result = False
             if record.type_id:
@@ -321,6 +327,12 @@ class VendorBill(models.Model):
 
     @api.depends("type_id")
     def _compute_allowed_pricelist_ids(self):
+        """Compute the pricelists selectable on this document.
+
+        Delegates to ``mixin.many2one_configurator`` using the
+        pricelist selection method (manual/domain/code) configured on
+        ``type_id``. Empty when no ``type_id`` is set yet.
+        """
         for record in self:
             result = False
             if record.type_id:
@@ -335,6 +347,12 @@ class VendorBill(models.Model):
 
     @api.depends("type_id")
     def _compute_allowed_product_ids(self):
+        """Compute the products selectable on the detail lines.
+
+        Delegates to ``mixin.many2one_configurator`` using the
+        product selection method (manual/domain/code) configured on
+        ``type_id``. Empty when no ``type_id`` is set yet.
+        """
         for record in self:
             result = False
             if record.type_id:
@@ -352,6 +370,12 @@ class VendorBill(models.Model):
         "tax_ids.tax_amount",
     )
     def _compute_amount(self):
+        """Compute the header monetary totals from lines and taxes.
+
+        ``amount_untaxed`` is the sum of ``line_ids.price_subtotal``,
+        ``amount_tax`` is the sum of ``tax_ids.tax_amount``, and
+        ``amount_total`` is their sum.
+        """
         for record in self:
             amount_untaxed = sum(record.line_ids.mapped("price_subtotal"))
             amount_tax = sum(record.tax_ids.mapped("tax_amount"))
@@ -365,6 +389,12 @@ class VendorBill(models.Model):
         "amount_total",
     )
     def _compute_realized(self):
+        """Compute the realized/residual portion of the total amount.
+
+        Derives both values from ``payable_move_line_id``'s residual
+        amount (sign-flipped, since it is a credit line); both are
+        zero when the document has no payable move line yet.
+        """
         for record in self:
             amount_realized = 0.0
             amount_residual = 0.0
@@ -393,22 +423,52 @@ class VendorBill(models.Model):
 
     # I. Action Methods
     def action_compute_tax(self):
+        """Recompute the tax lines from the current detail lines.
+
+        Called from the **Compute Tax** button on the Detail tab.
+        Runs with ``sudo()`` so users without direct write access to
+        ``vendor_bill.tax`` can still trigger the recomputation.
+        """
         for record in self.sudo():
             record._compute_tax()
 
     def _compute_tax(self):
+        """Replace the tax lines with the recomputed standard tax lines.
+
+        Thin wrapper around ``mixin.account_move``'s
+        ``_recompute_standard_tax`` -- kept as a separate method so it
+        can be called both from ``action_compute_tax`` and from the
+        pre-confirm hook below without duplicating ``ensure_one()``.
+        """
         self.ensure_one()
         self._recompute_standard_tax()
 
     # I2. Pre-confirm Hook: Recompute Tax
     @ssi_decorator.pre_confirm_action()
     def _01_compute_tax(self):
+        """Recompute the tax lines just before the record is confirmed.
+
+        Runs as a pre-``action_confirm`` hook so the tax lines saved
+        on the record always reflect the detail lines at confirmation
+        time, even if the user forgot to click **Compute Tax**
+        manually.
+        """
         self.ensure_one()
         self._recompute_standard_tax()
 
     # I3. Post-open Hooks: Create Accounting Entry / Skip Straight to Done
     @ssi_decorator.post_open_action()
     def _10_create_accounting_entry(self):
+        """Create the accounting entry when the document is opened.
+
+        Skipped when there are no detail lines (nothing to post) or
+        when ``move_id`` is already set (idempotent on repeated
+        calls). Creates the journal entry and its payable journal
+        item via ``mixin.account_move_single_line``/
+        ``mixin.account_move``, links ``payable_move_line_id`` to the
+        newly created line, generates a journal item for every
+        detail/tax line, and posts the move.
+        """
         self.ensure_one()
 
         if not self.line_ids or self.move_id:
@@ -432,6 +492,13 @@ class VendorBill(models.Model):
 
     @ssi_decorator.post_open_action()
     def _20_skip_open(self):
+        """Move a document without detail lines straight to Paid.
+
+        When ``_10_create_accounting_entry`` above did not create a
+        ``move_id`` (no detail lines), there is nothing left to
+        reconcile, so the document transitions directly to **Paid**
+        instead of waiting in **Unpaid**.
+        """
         self.ensure_one()
         if not self.move_id:
             self.action_done()
@@ -439,6 +506,13 @@ class VendorBill(models.Model):
     # I4. Post-cancel Hook: Delete Accounting Entry
     @ssi_decorator.post_cancel_action()
     def _30_delete_accounting_entry(self):
+        """Delete the accounting entry when the document is cancelled.
+
+        Runs as a post-``action_cancel`` hook so the journal entry
+        (and its journal items) created by
+        ``_10_create_accounting_entry`` does not linger once the
+        document is cancelled.
+        """
         self.ensure_one()
         self._delete_standard_move()  # Mixin
 

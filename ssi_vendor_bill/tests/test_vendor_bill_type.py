@@ -11,7 +11,17 @@ from odoo.tests import tagged
 
 @tagged("post_install", "-at_install")
 class TestVendorBillType(YamlTransactionCase):
+    """YAML-scenario and Python-pure tests for ``vendor_bill_type``.
+
+    ``test_vendor_bill_type`` runs the YAML scenario covering CRUD and
+    the master-data (de)activation flow. ``test_create_without_journal
+    _id_is_rejected`` below is a Python-pure escape hatch for an
+    assertion the YAML DSL cannot express (see its own docstring for
+    the ``P#``/``L-xx`` trigger code).
+    """
+
     def test_vendor_bill_type(self):
+        """Run the ``test_data_vendor_bill_type.yaml`` scenario."""
         self.run_yaml_scenario("test_data_vendor_bill_type.yaml")
 
     def test_create_without_journal_id_is_rejected(self):

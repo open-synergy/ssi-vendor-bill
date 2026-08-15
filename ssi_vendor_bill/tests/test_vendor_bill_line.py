@@ -11,10 +11,28 @@ from odoo.tools import mute_logger
 
 @tagged("post_install", "-at_install")
 class TestVendorBillLine(YamlTransactionCase):
+    """YAML-scenario and Python-pure tests for ``vendor_bill.line``.
+
+    ``test_vendor_bill_line`` runs the YAML scenario covering CRUD and
+    the price/tax computation of a detail line. The remaining
+    ``test_*`` methods below are Python-pure escape hatches for
+    assertions the YAML DSL cannot express (see their own docstrings
+    for the ``P#``/``L-xx`` trigger codes).
+    """
+
     def test_vendor_bill_line(self):
+        """Run the ``test_data_vendor_bill_line.yaml`` scenario."""
         self.run_yaml_scenario("test_data_vendor_bill_line.yaml")
 
     def _create_bill(self):
+        """Create a draft ``vendor_bill`` fixture for the tests below.
+
+        Built directly with ``create()`` (not from the YAML registry,
+        which only lives during ``run_yaml_scenario``), together with
+        the payable/expense accounts and journal it needs.
+
+        :return: tuple of (``vendor_bill`` record, expense account)
+        """
         payable_acc_type = self.env.ref("account.data_account_type_payable")
         expense_acc_type = self.env.ref("account.data_account_type_expenses")
         account = self.env["account.account"].create(

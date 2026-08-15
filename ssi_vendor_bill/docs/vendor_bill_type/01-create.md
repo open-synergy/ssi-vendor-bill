@@ -1,5 +1,10 @@
 # Create Vendor Bill Type
 
+> **Module:** ssi_vendor_bill\
+> **Model:** `vendor_bill_type`\
+> **Menu:** Financial Accounting > Configuration > Vendor Bill Types\
+> **Actor:** user in group `Vendor Bill Type`
+
 ## Pre-Condition
 
 - None.

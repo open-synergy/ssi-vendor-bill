@@ -1,5 +1,12 @@
 # Restart Vendor Bill
 
+> **Module:** ssi_vendor_bill\
+> **Model:** `vendor_bill`\
+> **Menu:** Financial Accounting > Account Payable > Vendor Bill\
+> **Actor:** user in group `Vendor Bill / Validator`\
+> **State:** `cancel`/`reject` → `draft`\
+> **Requires:** `10-cancel`
+
 ## Pre-Condition
 
 - Record is in **Cancelled** or **Rejected** status.

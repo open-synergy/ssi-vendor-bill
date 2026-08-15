@@ -11,7 +11,17 @@ from odoo.tools import mute_logger
 
 @tagged("post_install", "-at_install")
 class TestVendorBill(YamlTransactionCase):
+    """YAML-scenario and Python-pure tests for ``vendor_bill``.
+
+    ``test_vendor_bill`` runs the YAML scenario covering CRUD, compute,
+    onchange, and the confirm/approve/reject/cancel/restart workflow.
+    The remaining ``test_*`` methods below are Python-pure escape
+    hatches for assertions the YAML DSL cannot express (see their own
+    docstrings for the ``P#``/``L-xx`` trigger codes).
+    """
+
     def test_vendor_bill(self):
+        """Run the ``test_data_vendor_bill.yaml`` scenario."""
         self.run_yaml_scenario("test_data_vendor_bill.yaml")
 
     def _create_bill_with_lines(self):

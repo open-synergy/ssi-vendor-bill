@@ -1,5 +1,12 @@
 # Auto Transition to Unpaid — Vendor Bill
 
+> **Module:** ssi_vendor_bill\
+> **Model:** `vendor_bill`\
+> **Menu:** Financial Accounting > Account Payable > Vendor Bill\
+> **Actor:** system (`base.automation`), when the payable move line becomes unreconciled\
+> **State:** `done` → `open`\
+> **Requires:** `20-auto-paid`
+
 ## Pre-Condition
 
 - Record is in **Paid** status.
