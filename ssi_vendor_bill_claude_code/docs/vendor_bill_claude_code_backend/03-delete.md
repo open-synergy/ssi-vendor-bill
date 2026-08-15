@@ -1,14 +1,14 @@
 # Delete Vendor Bill AI Backend
 
-> **Module:** ssi_vendor_bill_claude_code
-> **Model:** `vendor.bill.claude.code.backend`
-> **Menu:** Financial Accounting > Configuration > Account > Vendor Bill AI Backends
-> **Actor:** user in group *Vendor Bill Claude Code Import*
+> **Module:** `ssi_vendor_bill_claude_code`\
+> **Model:** `vendor.bill.claude.code.backend`\
+> **Menu:** Financial Accounting > Configuration > Account > Vendor Bill AI Backends\
+> **Actor:** user in group `Vendor Bill Claude Code Import`\
 > **Requires:** `01-create`
 
 ## Pre-Condition
 
-- **Access:** User is in group *Vendor Bill Claude Code Import*.
+- **Access:** User is in group `Vendor Bill Claude Code Import`.
 
 ## Flow
 

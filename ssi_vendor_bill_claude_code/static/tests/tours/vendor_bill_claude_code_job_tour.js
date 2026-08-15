@@ -42,7 +42,8 @@ odoo.define("ssi_vendor_bill_claude_code.vendor_bill_claude_code_job_tour", func
             },
             {
                 content: "Open the Bills menu",
-                trigger: '.o_menu_sections [data-menu-xmlid="ssi_financial_accounting.vendor_bill_menu"]',
+                trigger:
+                    '.o_menu_sections [data-menu-xmlid="ssi_financial_accounting.vendor_bill_menu"]',
             },
             {
                 content: "Bills list is displayed",
@@ -56,7 +57,8 @@ odoo.define("ssi_vendor_bill_claude_code.vendor_bill_claude_code_job_tour", func
             // Flow 2 — Open the draft vendor bill prepared in setUpClass
             {
                 content: "Open the draft vendor bill",
-                trigger: ".o_data_row:contains(Tour AI Import Vendor) .o_data_cell:first",
+                trigger:
+                    ".o_data_row:contains(Tour AI Import Vendor) .o_data_cell:first",
                 extra_trigger: ".o_list_view",
             },
             {

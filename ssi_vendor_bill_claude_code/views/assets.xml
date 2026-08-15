@@ -12,11 +12,11 @@
             <script
                 type="text/javascript"
                 src="/ssi_vendor_bill_claude_code/static/tests/tours/vendor_bill_claude_code_backend_tour.js"
-            ></script>
+            />
             <script
                 type="text/javascript"
                 src="/ssi_vendor_bill_claude_code/static/tests/tours/vendor_bill_claude_code_job_tour.js"
-            ></script>
+            />
         </xpath>
     </template>
 </odoo>

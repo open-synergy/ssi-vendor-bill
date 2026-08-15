@@ -1,16 +1,16 @@
 # Activate Vendor Bill AI Backend
 
-> **Module:** ssi_vendor_bill_claude_code
-> **Model:** `vendor.bill.claude.code.backend`
-> **Menu:** Financial Accounting > Configuration > Account > Vendor Bill AI Backends
-> **Actor:** user in group *Vendor Bill Claude Code Import*
-> **Active:** `false` → `true`
+> **Module:** `ssi_vendor_bill_claude_code`\
+> **Model:** `vendor.bill.claude.code.backend`\
+> **Menu:** Financial Accounting > Configuration > Account > Vendor Bill AI Backends\
+> **Actor:** user in group `Vendor Bill Claude Code Import`\
+> **Active:** `false` → `true`\
 > **Requires:** `04-deactivate`
 
 ## Pre-Condition
 
 - **Record:** The record is currently archived.
-- **Access:** User is in group *Vendor Bill Claude Code Import*.
+- **Access:** User is in group `Vendor Bill Claude Code Import`.
 
 ## Flow
 
@@ -23,5 +23,5 @@
 ## Post-Condition
 
 - The records are restored and appear again in the default list view.
-- The backends can be selected again on the AI Import wizard and as a purchase
-  journal's default backend.
+- The backends can be selected again on the AI Import wizard and as a purchase journal's
+  default backend.

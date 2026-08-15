@@ -1,16 +1,16 @@
 # Deactivate Vendor Bill AI Backend
 
-> **Module:** ssi_vendor_bill_claude_code
-> **Model:** `vendor.bill.claude.code.backend`
-> **Menu:** Financial Accounting > Configuration > Account > Vendor Bill AI Backends
-> **Actor:** user in group *Vendor Bill Claude Code Import*
-> **Active:** `true` → `false`
+> **Module:** `ssi_vendor_bill_claude_code`\
+> **Model:** `vendor.bill.claude.code.backend`\
+> **Menu:** Financial Accounting > Configuration > Account > Vendor Bill AI Backends\
+> **Actor:** user in group `Vendor Bill Claude Code Import`\
+> **Active:** `true` → `false`\
 > **Requires:** `01-create`
 
 ## Pre-Condition
 
 - **Record:** The record is currently active.
-- **Access:** User is in group *Vendor Bill Claude Code Import*.
+- **Access:** User is in group `Vendor Bill Claude Code Import`.
 
 ## Flow
 
