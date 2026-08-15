@@ -457,8 +457,22 @@ odoo.define(
 
                 // Flow 2 — Enable the Archived filter
                 {
+                    // Wait for the initial list to finish rendering first, so
+                    // the Filters dropdown is opened on a stable state.
+                    content: "Wait for the list data to finish loading",
+                    trigger: ".o_list_view",
+                    run: function () {
+                        // Assertion only.
+                    },
+                },
+                {
                     content: "Open the Filters menu",
-                    trigger: ".o_cp_searchview .o_filter_menu button",
+                    trigger: ".o_filter_menu .o_dropdown_toggler_btn",
+                    run: function () {
+                        // Owl dropdown 14.0 does not always open on a
+                        // synthetic click — use a native click.
+                        this.$anchor[0].click();
+                    },
                 },
                 {
                     content: "Enable the Archived filter",

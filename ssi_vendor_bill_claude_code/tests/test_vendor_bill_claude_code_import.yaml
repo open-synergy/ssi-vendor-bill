@@ -61,10 +61,27 @@ scenarios:
           code: "BL245-NOACCESS"
           base_url: "https://vendor-bill.example.com"
           bearer_token: "test-token"
-      - step: "Demo user cannot create the import wizard"
+      - step: "Create an internal user without the Billing group"
+        # base.user_demo is NOT a usable negative here: core Odoo's own
+        # account/demo/account_demo.xml adds base.user_demo to
+        # account.group_account_invoice when demo data is loaded, so it
+        # already has legitimate access. A dedicated user holding only
+        # base.group_user is required to prove the ACL actually denies
+        # non-Billing users.
+        action: "create"
+        model: "res.users"
+        save_as: "no_billing_user"
+        values:
+          name: "No Billing Access"
+          login: "no-billing-access-tour"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+      - step: "User without the Billing group cannot create the import wizard"
         action: "create"
         model: "import_vendor_bill_claude_code"
-        as_user: "base.user_demo"
+        as_user: "no_billing_user"
         expect_error:
           type: "AccessError"
         values:
