@@ -1,5 +1,12 @@
 # Approve Vendor Bill
 
+> **Module:** ssi_vendor_bill\
+> **Model:** `vendor_bill`\
+> **Menu:** Financial Accounting > Account Payable > Vendor Bill\
+> **Actor:** user in group `Vendor Bill / Validator`, registered as active approver\
+> **State:** `confirm` → `open`\
+> **Requires:** `04-confirm`
+
 ## Pre-Condition
 
 - Record is in **Waiting for Approval** status.

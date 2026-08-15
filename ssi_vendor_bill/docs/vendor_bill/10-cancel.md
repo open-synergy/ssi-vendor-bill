@@ -1,5 +1,12 @@
 # Cancel Vendor Bill
 
+> **Module:** ssi_vendor_bill\
+> **Model:** `vendor_bill`\
+> **Menu:** Financial Accounting > Account Payable > Vendor Bill\
+> **Actor:** user in group `Vendor Bill / Validator`\
+> **State:** `draft`/`confirm`/`open` → `cancel`\
+> **Requires:** `01-create`
+
 ## Pre-Condition
 
 - Record is in **Draft**, **Waiting for Approval**, or **Unpaid** status.

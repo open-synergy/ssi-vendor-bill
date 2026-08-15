@@ -2,11 +2,11 @@
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo.tests import HttpCase, tagged
+from odoo.tests import HttpSavepointCase, tagged
 
 
 @tagged("post_install", "-at_install")
-class TestUiVendorBillType(HttpCase):
+class TestUiVendorBillType(HttpSavepointCase):
     """UI/UX tour tests for ``vendor_bill_type``.
 
     Every ``test_*`` method below runs the tour pairing with the IK file
@@ -19,6 +19,12 @@ class TestUiVendorBillType(HttpCase):
 
     @classmethod
     def setUpClass(cls):
+        """Prepare the Pre-Condition fixtures shared by every tour below.
+
+        Creates the journal/payable account plus one
+        ``vendor_bill_type`` record per tour (active or archived, as
+        each tour's Pre-Condition requires).
+        """
         super().setUpClass()
 
         payable_acc_type = cls.env.ref("account.data_account_type_payable")

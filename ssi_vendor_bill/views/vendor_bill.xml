@@ -81,6 +81,24 @@
                             <field name="tax_ids" widget="many2many_tags" />
                             <field name="price_subtotal" sum="Untaxed Amount" />
                         </tree>
+                        <form>
+                            <group name="vendor_bill_line_group_1">
+                                <field name="currency_id" invisible="1" />
+                                <field
+                                        name="product_id"
+                                        domain="[('id','in',parent.allowed_product_ids)]"
+                                    />
+                                <field name="name" />
+                                <field name="usage_id" />
+                                <field name="account_id" />
+                                <field name="analytic_account_id" />
+                                <field name="uom_id" />
+                                <field name="uom_quantity" />
+                                <field name="price_unit" />
+                                <field name="tax_ids" widget="many2many_tags" />
+                                <field name="price_subtotal" />
+                            </group>
+                        </form>
                     </field>
                     <div class="oe_right">
                         <button
@@ -101,6 +119,17 @@
                             <field name="tax_amount" sum="Tax Amount" />
                             <field name="manual" />
                         </tree>
+                        <form>
+                            <group name="vendor_bill_tax_group_1">
+                                <field name="currency_id" invisible="1" />
+                                <field name="name" />
+                                <field name="tax_id" />
+                                <field name="account_id" />
+                                <field name="base_amount" />
+                                <field name="tax_amount" />
+                                <field name="manual" />
+                            </group>
+                        </form>
                     </field>
                     <group name="detail_amount" col="2">
                         <field name="amount_untaxed" />
