@@ -299,6 +299,199 @@ scenarios:
             type: "value"
             expected: 2024-02-15
 
+  - name: "Approve copies the vendor and document number to the journal entry header"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          partner_document_number: "INV-001"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line so the bill has something to post"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 150000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Assert the journal entry header"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id.state:
+            type: "value"
+            expected: "posted"
+          move_id.partner_id:
+            type: "m2o"
+            expected: "REC: vendor"
+          move_id.ref:
+            type: "value"
+            expected: "INV-001"
+
+  - name: "Approve without a document number leaves the journal entry ref empty"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line so the bill has something to post"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 150000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Assert the journal entry header"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id.state:
+            type: "value"
+            expected: "posted"
+          move_id.ref:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Approve ignores stale default_move_type and default_partner_id in context"
+    steps:
+      - step: "Create vendor bill"
+        action: "create"
+        model: "vendor_bill"
+        save_as: "bill"
+        values:
+          type_id: "REC: type.id"
+          partner_id: "REC: vendor.id"
+          date: 2024-01-15
+          date_due: 2024-02-15
+          currency_id: "REF: base.USD"
+          pricelist_id: "REF: product.list0"
+          journal_id: "REC: journal.id"
+          payable_account_id: "REC: account.id"
+
+      - step: "Create a detail line so the bill has something to post"
+        action: "create"
+        model: "vendor_bill.line"
+        save_as: "line"
+        values:
+          vendor_bill_id: "REC: bill.id"
+          name: "Line"
+          account_id: "REC: line_account.id"
+          uom_quantity: 1
+          price_unit: 150000.0
+
+      - step: "Confirm the bill"
+        action: "call"
+        target: "bill"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Approve the bill"
+        action: "call"
+        target: "bill"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        context:
+          default_move_type: "in_invoice"
+          default_partner_id: "EVAL: env.user.partner_id.id"
+        refresh: true
+        asserts:
+          state:
+            type: "value"
+            expected: "open"
+
+      - step: "Assert the journal entry header"
+        action: "assert"
+        target: "bill"
+        refresh: true
+        asserts:
+          move_id.state:
+            type: "value"
+            expected: "posted"
+          move_id.partner_id:
+            type: "m2o"
+            expected: "REC: vendor"
+          move_id.move_type:
+            type: "value"
+            expected: "entry"
+
   - name: "Done moves bill from open to done"
     steps:
       - step: "Create vendor bill"

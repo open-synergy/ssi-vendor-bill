@@ -474,21 +474,49 @@ class VendorBill(models.Model):
         if not self.line_ids or self.move_id:
             return True
 
-        self._create_standard_move()  # Mixin
-        ml = self._create_standard_ml()  # Mixin
-        self.write(
+        # Drop every ``default_*`` key inherited from the caller's
+        # action context (e.g. a stale ``default_move_type``) so the
+        # journal entry, its journal items and the post are not
+        # influenced by it.
+        clean_context = {
+            key: value
+            for key, value in self.env.context.items()
+            if not key.startswith("default_")
+        }
+        bill = self.with_context(clean_context)
+
+        bill._create_standard_move()  # Mixin
+        ml = bill._create_standard_ml()  # Mixin
+        bill.write(
             {
                 "payable_move_line_id": ml.id,
             }
         )
 
-        for line in self.line_ids:
+        for line in bill.line_ids:
             line._create_standard_ml()  # Mixin
 
-        for tax in self.tax_ids:
+        for tax in bill.tax_ids:
             tax._create_standard_ml()  # Mixin
 
-        self._post_standard_move()  # Mixin
+        bill._post_standard_move()  # Mixin
+
+    # I3a. Override: Add Partner and Ref to Standard Move Header
+    def _prepare_standard_move(self):
+        """Add the document partner and vendor reference to the header.
+
+        Extends the ``mixin.account_move`` values (``name``,
+        ``journal_id``, ``date``) with ``partner_id`` and ``ref``,
+        so the generated ``account.move`` carries the same partner
+        and vendor document number as this document. ``ref`` is
+        ``False`` when ``partner_document_number`` is empty.
+
+        :return: dict of ``account.move`` values
+        """
+        res = super()._prepare_standard_move()
+        res["partner_id"] = getattr(self, self._partner_id_field_name).id
+        res["ref"] = self.partner_document_number or False
+        return res
 
     @ssi_decorator.post_open_action()
     def _20_skip_open(self):
