@@ -500,6 +500,13 @@ msgid "Font awesome icon e.g. fa-tasks"
 msgstr ""
 
 #. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__note
+msgid ""
+"Free-form note attached to the document, used for any additional remarks or "
+"information related to the transaction."
+msgstr ""
+
+#. module: ssi_vendor_bill
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill__id
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_line__id
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_tax__id
@@ -788,6 +795,16 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_line__partner_id
 #: model:ir.model.fields,field_description:ssi_vendor_bill.field_vendor_bill_tax__partner_id
 msgid "Partner"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__company_partner_id
+msgid ""
+"Partner (res.partner) linked to the document's company\n"
+"\n"
+"* Automatically follows 'company_id.partner_id'.\n"
+"* Used for reporting/printing documents that require the company-level\n"
+"  partner instead of the responsible user's partner."
 msgstr ""
 
 #. module: ssi_vendor_bill
@@ -1312,4 +1329,14 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__website_message_ids
 #: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill_type__website_message_ids
 msgid "Website communication history"
+msgstr ""
+
+#. module: ssi_vendor_bill
+#: model:ir.model.fields,help:ssi_vendor_bill.field_vendor_bill__state
+msgid ""
+"Workflow status of the document\n"
+"\n"
+"* 'draft' is the only base state provided by this mixin.\n"
+"* Other states (e.g. confirmed, done, cancel) are added by derivative mixin\n"
+"  modules (such as confirm/done/cancel mixins) via 'selection_add'."
 msgstr ""
